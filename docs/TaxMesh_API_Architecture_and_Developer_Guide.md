@@ -1,32 +1,33 @@
 # TAXMESH — API Architecture & Developer Guide
 
-**Microservices · Contract Catalog · Filing Workflow · API Testing**
+**Microservices · Contract Catalog · Filing Workflow · Data-flow APIs · API Testing**
 
-Version **1.1** | Aligned to running TaxMesh demo | Local development
+Version **1.2** | Aligned to running TaxMesh demo | Local development
 
 ---
 
 ## Document purpose
 
-This guide is the developer-facing reference for TaxMesh: logical architecture, service responsibilities, gateway routes, filing orchestration, contracts CT-00…CT-17, reverse-contract interactions, Excel uploads, quality gates, TIM/RPAM business validation, errors, and automation.
+This guide is the developer-facing reference for TaxMesh: logical architecture, workspace codes, gateway routes, filing orchestration, contracts CT-00…CT-17, **downstream / upstream** data-flow APIs, reverse-contract interactions, Excel uploads, quality gates, TAX/ALC business validation, errors, and automation.
 
-**Accuracy:** Paths and behaviors below match the current codebase (`gateway`, `services/*`, `shared/*`). Letter aliases A–E are supported on the gateway proxy for guide compatibility.
+**Accuracy:** Paths and behaviors match the current codebase (`gateway`, `services/*`, `shared/*`). Letter aliases A–E and legacy codes (CEM/MAD/CAM/TIM/RPAM/FORMS) are accepted on the gateway proxy.
 
 ## Contents
 
 1. Platform overview and architecture  
 2. Microservices and ports  
 3. Filing workflow and orchestration endpoints  
-4. Contract catalog CT-00 through CT-17  
-5. How producer-consumer calls work  
-6. Reverse contracts and issue resolution  
-7. Excel templates and upload APIs  
-8. Quality gates and business validations  
-9. Gateway and service-level endpoints  
-10. Error handling and troubleshooting  
-11. API automation and CI validation  
-12. Security, observability and production-readiness checklist  
-13. Related files and quick reference  
+4. Downstream / upstream data-flow APIs  
+5. Contract catalog CT-00 through CT-17  
+6. How producer-consumer calls work  
+7. Reverse (upstream) contracts and issue resolution  
+8. Excel templates and upload APIs  
+9. Quality gates and business validations  
+10. Gateway and service-level endpoints  
+11. Error handling and troubleshooting  
+12. API automation and CI validation  
+13. Security, observability and production-readiness checklist  
+14. Related files and quick reference  
 
 ---
 
@@ -34,17 +35,26 @@ This guide is the developer-facing reference for TaxMesh: logical architecture, 
 
 TaxMesh supports a Form **1065** tax filing journey:
 
-**CEM → MAD → CAM → TIM → RPAM → Forms Print / E-file**
+**CLM → MDM → ACC → TAX → ALC → DOC / E-file**
 
-The gateway runs on port **4100** and provides the SPA, filing orchestration, service proxy, health checks, contract discovery, and Swagger/OpenAPI.
+| Workspace | Code |
+|-----------|------|
+| Client Management | CLM |
+| Master Data | MDM |
+| Accounting | ACC |
+| Tax Computation | TAX |
+| Allocations | ALC |
+| Forms & Documents | DOC |
+
+The gateway runs on port **4100** and provides the SPA, filing orchestration, **data-flow APIs**, service proxy, health checks, contract discovery, and Swagger/OpenAPI.
 
 **Upload-driven flow (primary UI path):**
 
-1. Upload **CEM + MAD** → consumed by CAM and TIM.  
-2. Upload **CAM** → joins CEM + MAD, pushes into TIM and RPAM.  
-3. TIM + RPAM calculate (validated) → Forms Print package.
+1. Upload **CLM + MDM** → consumed by ACC and TAX.  
+2. Upload **ACC** → joins CLM + MDM, pushes into TAX and ALC.  
+3. TAX + ALC calculate (validated) → DOC package.
 
-**Service-letter mapping** used by contract proxy routes: **A = MAD, B = CAM, C = TIM, D = RPAM, E = FORMS**. CEM is a separate engagement service (no letter). Prefer `/api/proxy/MAD/…` or `/api/proxy/A/…` equivalently.
+**Service-letter mapping:** **A = MDM, B = ACC, C = TAX, D = ALC, E = DOC**. CLM has no letter. Prefer `/api/proxy/MDM/…` or `/api/proxy/A/…` equivalently. Legacy `/api/proxy/MAD/…` still resolves to MDM.
 
 ---
 
@@ -52,13 +62,13 @@ The gateway runs on port **4100** and provides the SPA, filing orchestration, se
 
 | Service / ID | Letter | Port | Responsibility | Example base URL |
 |--------------|--------|------|----------------|------------------|
-| Gateway | — | 4100 | UI, filing orchestration, proxy, Swagger | http://127.0.0.1:4100 |
-| CEM | — | 4101 | Client engagement, filing context, **entity name** | http://127.0.0.1:4101 |
-| MAD | A | 4102 | Master data, entities, tax attributes, ownership | http://127.0.0.1:4102 |
-| CAM | B | 4103 | Accounting and trial balance | http://127.0.0.1:4103 |
-| TIM | C | 4104 | Tax engine + business validation | http://127.0.0.1:4104 |
-| RPAM | D | 4105 | Partner allocations + business validation | http://127.0.0.1:4105 |
-| FORMS | E | 4106 | Forms print, Form 1065 package and e-file | http://127.0.0.1:4106 |
+| Gateway | — | 4100 | UI, filing, flow APIs, proxy, Swagger | http://127.0.0.1:4100 |
+| CLM | — | 4101 | Client Management — engagement, **entity name** | http://127.0.0.1:4101 |
+| MDM | A | 4102 | Master Data — entities, tax attributes, ownership | http://127.0.0.1:4102 |
+| ACC | B | 4103 | Accounting — trial balance | http://127.0.0.1:4103 |
+| TAX | C | 4104 | Tax Computation + business validation | http://127.0.0.1:4104 |
+| ALC | D | 4105 | Allocations + business validation | http://127.0.0.1:4105 |
+| DOC | E | 4106 | Forms & Documents — 1065 package and e-file | http://127.0.0.1:4106 |
 
 ### Gateway entry points
 
@@ -67,7 +77,10 @@ Swagger UI:      http://127.0.0.1:4100/api-docs
 OpenAPI JSON:    http://127.0.0.1:4100/openapi.json
 Gateway health:  http://127.0.0.1:4100/api/health
 Architecture:    http://127.0.0.1:4100/api/architecture
+Data flow:       http://127.0.0.1:4100/api/flow
 ```
+
+**Swagger behind tunnels:** OpenAPI defaults to same-origin server `/` so **Try it out** uses the public host (e.g. `*.trycloudflare.com`). Optional: `PUBLIC_BASE_URL=https://your-host`.
 
 ---
 
@@ -78,10 +91,10 @@ Filing orchestration is exposed at `/api/filing/*` on the gateway.
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | `/api/filing` | Engagement snapshot, steps, gates, issues, dataFlow |
-| POST | `/api/filing/reset` | **Blank** reset (demo only) — clears banner + uploads + calcs |
+| POST | `/api/filing/reset` | **Blank** reset — clears banner + uploads + calcs |
 | POST | `/api/filing/run/{stepId}` | Run one step: cem, setup, books, tax, allocate, forms, efile |
 | POST | `/api/filing/run-all` | Load demo seed then full journey through MeF |
-| POST | `/api/filing/process-flow` | Re-run TIM → RPAM → Forms after uploads |
+| POST | `/api/filing/process-flow` | Re-run TAX → ALC → DOC after uploads |
 | GET | `/api/filing/data-flow` | Consumption graph for UI |
 | GET | `/api/filing/form1065` | Form lines, K-1s, package, e-file |
 | GET | `/api/filing/gates` | AQG1–AQG5 quality gate state |
@@ -89,13 +102,15 @@ Filing orchestration is exposed at `/api/filing/*` on the gateway.
 | POST | `/api/filing/issues/{id}/resolve` | Resolve a reverse-contract issue |
 | PATCH | `/api/filing/entity` | Update entity fields |
 | GET | `/api/filing/datasets` | List five demo Excel datasets |
-| POST | `/api/filing/upload/cem` | Upload CEM `.xlsx`; multipart field `file` |
-| POST | `/api/filing/upload/mad` | Upload MAD `.xlsx`; sheets Entity and Partners |
-| POST | `/api/filing/upload/cam` | Upload CAM `.xlsx`; sheet TrialBalance → auto TIM/RPAM/Forms |
-| GET | `/api/filing/validate/tim` | TIM business validation report |
-| GET | `/api/filing/validate/rpam` | RPAM business validation report |
-| POST | `/api/filing/tim/calculate` | Execute TIM calculation |
-| POST | `/api/filing/rpam/allocate` | Execute RPAM allocations |
+| POST | `/api/filing/upload/clm` | Upload CLM `.xlsx`; multipart field `file` |
+| POST | `/api/filing/upload/mdm` | Upload MDM `.xlsx`; sheets Entity and Partners |
+| POST | `/api/filing/upload/acc` | Upload ACC `.xlsx`; TrialBalance → auto TAX/ALC/DOC |
+| GET | `/api/filing/validate/tax` | TAX business validation report |
+| GET | `/api/filing/validate/alc` | ALC business validation report |
+| POST | `/api/filing/tax/calculate` | Execute TAX calculation |
+| POST | `/api/filing/alc/allocate` | Execute ALC allocations |
+
+Legacy upload paths `/upload/cem|mad|cam` map to CLM/MDM/ACC.
 
 ### Examples
 
@@ -109,52 +124,87 @@ curl -X POST "http://127.0.0.1:4100/api/filing/reset"
 
 ---
 
-## 4. Contract catalog: CT-00 through CT-17
+## 4. Downstream / upstream data-flow APIs
 
-Downstream contracts provide business data to consumers. Reverse contracts provide gaps, requests, or correction requirements to upstream owners.
+| Term | Meaning |
+|------|---------|
+| **Downstream** | Forward along the journey (producer earlier → consumer later) |
+| **Upstream** | Reverse / feedback ask (`direction: reverse` in the contract catalog) |
 
-| ID | Producer | Consumer | Direction | Gateway endpoint | Purpose |
-|----|----------|----------|-----------|------------------|---------|
-| CT-00 | CEM | MAD | Downstream | `/api/proxy/CEM/contracts/ct-00/engagement-context` | Engagement / project / job |
-| CT-01 | MAD / A | CAM / B | Downstream | `/api/proxy/A/contracts/ct-01/entities` | Entities for account mapping |
-| CT-02 | MAD / A | TIM / C | Downstream | `/api/proxy/A/contracts/ct-02/tax-attributes` | Entity tax attributes |
-| CT-03 | MAD / A | RPAM / D | Downstream | `/api/proxy/A/contracts/ct-03/ownership` | Partner ownership |
-| CT-04 | MAD / A | FORMS / E | Downstream | `/api/proxy/A/contracts/ct-04/filing-meta` | Filing metadata |
-| CT-05 | CAM / B | MAD / A | Reverse | `/api/proxy/B/contracts/ct-05/mapping-gaps` | Missing entity/account codes |
-| CT-06 | CAM / B | TIM / C | Downstream | `/api/proxy/B/contracts/ct-06/book-balances` | Book account balances |
-| CT-07 | CAM / B | RPAM / D | Downstream | `/api/proxy/B/contracts/ct-07/capital-map` | Capital account mappings |
-| CT-08 | TIM / C | MAD / A | Reverse | `/api/proxy/C/contracts/ct-08/attribute-gaps` | Tax attribute corrections |
-| CT-09 | TIM / C | CAM / B | Reverse | `/api/proxy/C/contracts/ct-09/btt-asks` | Book-to-tax reconciliation asks |
-| CT-10 | TIM / C | RPAM / D | Downstream | `/api/proxy/C/contracts/ct-10/taxable-income` | Taxable income buckets |
-| CT-11 | TIM / C | FORMS / E | Downstream | `/api/proxy/C/contracts/ct-11/tax-summary` | Tax computation summary |
-| CT-12 | RPAM / D | MAD / A | Reverse | `/api/proxy/D/contracts/ct-12/ownership-issues` | Ownership validation issues |
-| CT-13 | RPAM / D | TIM / C | Reverse | `/api/proxy/D/contracts/ct-13/allocation-needs` | Adjusted tax amount needs |
-| CT-14 | RPAM / D | FORMS / E | Downstream | `/api/proxy/D/contracts/ct-14/partner-allocations` | Partner allocations / K-1 |
-| CT-15 | FORMS / E | MAD / A | Reverse | `/api/proxy/E/contracts/ct-15/entity-print-needs` | Legal name / EIN for forms |
-| CT-16 | FORMS / E | TIM / C | Reverse | `/api/proxy/E/contracts/ct-16/tax-line-needs` | Tax line amounts for forms |
-| CT-17 | FORMS / E | RPAM / D | Reverse | `/api/proxy/E/contracts/ct-17/capital-restatement` | Partner capital restatement |
+### Gateway
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/flow` | Full catalog — peers, edges, endpoint map |
+| GET | `/api/flow/edges?direction=` | Filter edges |
+| GET | `/api/flow/downstream/{from}/{to}` | Pair payloads (sample + live) |
+| GET | `/api/flow/upstream/{from}/{to}` | Upstream pair payloads |
+| GET | `/api/contracts?direction=&producer=&consumer=` | Filter CT list |
+
+### Per service (`/api/proxy/{CLM\|MDM\|ACC\|TAX\|ALC\|DOC}/…`)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/flow` | This service’s down/up peers and contracts |
+| GET | `/contracts/downstream` | Direction-scoped catalog |
+| GET | `/contracts/upstream` | Direction-scoped catalog |
+| GET | `/downstream/{peer}` | Produce payloads to peer |
+| GET | `/upstream/{peer}` | Produce upstream payloads to peer |
+| GET | `/consume/downstream` | Batch-pull all downstream inputs |
+| GET | `/consume/upstream` | Batch-pull all upstream inputs |
+| GET | `/pipeline?direction=` | Reachability (optional filter) |
+
+```bash
+curl http://127.0.0.1:4100/api/flow
+curl http://127.0.0.1:4100/api/flow/downstream/MDM/TAX
+curl http://127.0.0.1:4100/api/proxy/MDM/downstream/TAX
+curl http://127.0.0.1:4100/api/proxy/TAX/upstream/MDM
+curl http://127.0.0.1:4100/api/proxy/TAX/consume/downstream
+```
+
+Counts: **10** downstream + **8** upstream = **18** contracts (CT-00…CT-17).
 
 ---
 
-## 5. How producer-consumer API calls work
+## 5. Contract catalog: CT-00 through CT-17
 
-Three concepts:
+| ID | Producer | Consumer | Direction | Gateway endpoint | Purpose |
+|----|----------|----------|-----------|------------------|---------|
+| CT-00 | CLM | MDM | Downstream | `/api/proxy/CLM/contracts/ct-00/engagement-context` | Engagement / project / job |
+| CT-01 | MDM / A | ACC / B | Downstream | `/api/proxy/A/contracts/ct-01/entities` | Entities for account mapping |
+| CT-02 | MDM / A | TAX / C | Downstream | `/api/proxy/A/contracts/ct-02/tax-attributes` | Entity tax attributes |
+| CT-03 | MDM / A | ALC / D | Downstream | `/api/proxy/A/contracts/ct-03/ownership` | Partner ownership |
+| CT-04 | MDM / A | DOC / E | Downstream | `/api/proxy/A/contracts/ct-04/filing-meta` | Filing metadata |
+| CT-05 | ACC / B | MDM / A | Upstream | `/api/proxy/B/contracts/ct-05/mapping-gaps` | Missing entity/account codes |
+| CT-06 | ACC / B | TAX / C | Downstream | `/api/proxy/B/contracts/ct-06/book-balances` | Book account balances |
+| CT-07 | ACC / B | ALC / D | Downstream | `/api/proxy/B/contracts/ct-07/capital-map` | Capital account mappings |
+| CT-08 | TAX / C | MDM / A | Upstream | `/api/proxy/C/contracts/ct-08/attribute-gaps` | Tax attribute corrections |
+| CT-09 | TAX / C | ACC / B | Upstream | `/api/proxy/C/contracts/ct-09/btt-asks` | Book-to-tax reconciliation asks |
+| CT-10 | TAX / C | ALC / D | Downstream | `/api/proxy/C/contracts/ct-10/taxable-income` | Taxable income buckets |
+| CT-11 | TAX / C | DOC / E | Downstream | `/api/proxy/C/contracts/ct-11/tax-summary` | Tax computation summary |
+| CT-12 | ALC / D | MDM / A | Upstream | `/api/proxy/D/contracts/ct-12/ownership-issues` | Ownership validation issues |
+| CT-13 | ALC / D | TAX / C | Upstream | `/api/proxy/D/contracts/ct-13/allocation-needs` | Adjusted tax amount needs |
+| CT-14 | ALC / D | DOC / E | Downstream | `/api/proxy/D/contracts/ct-14/partner-allocations` | Partner allocations / K-1 |
+| CT-15 | DOC / E | MDM / A | Upstream | `/api/proxy/E/contracts/ct-15/entity-print-needs` | Legal name / EIN for forms |
+| CT-16 | DOC / E | TAX / C | Upstream | `/api/proxy/E/contracts/ct-16/tax-line-needs` | Tax line amounts for forms |
+| CT-17 | DOC / E | ALC / D | Upstream | `/api/proxy/E/contracts/ct-17/capital-restatement` | Partner capital restatement |
+
+---
+
+## 6. How producer-consumer API calls work
 
 1. **Producer endpoint:** `/api/proxy/{producer}/contracts/ct-XX/...` returns a payload owned by the producer.  
-2. **Consumer endpoint:** `/api/proxy/{consumer}/consume/{contractId}` checks the consumer can pull a contract it consumes.  
-3. **Pipeline endpoint:** `/api/proxy/{service}/pipeline` checks reachability for contracts that service consumes.
+2. **Consumer endpoint:** `/api/proxy/{consumer}/consume/{contractId}` pulls a contract it consumes.  
+3. **Pipeline endpoint:** `/api/proxy/{service}/pipeline` checks reachability for contracts that service consumes.  
+4. **Peer flow:** `/api/proxy/{from}/downstream/{to}` or `/upstream/{to}` returns all contracts on that edge.
 
-### Example: CAM → TIM via CT-06
+### Example: ACC → TAX via CT-06
 
 ```bash
-# 1. Inspect the producer payload
 curl http://127.0.0.1:4100/api/proxy/B/contracts/ct-06/book-balances
-
-# 2. Exercise the consumer-side contract call
 curl http://127.0.0.1:4100/api/proxy/C/consume/CT-06
-
-# 3. Check TIM's consumed-producer reachability
 curl http://127.0.0.1:4100/api/proxy/C/pipeline
+curl http://127.0.0.1:4100/api/flow/downstream/ACC/TAX
 ```
 
 ### Example CT-11 tax summary payload (sample shape)
@@ -170,34 +220,35 @@ curl http://127.0.0.1:4100/api/proxy/C/pipeline
     "status": "computed",
     "version": "TIM-2025.1"
   },
-  "producer": "TIM",
-  "consumer": "FORMS",
-  "direction": "downstream"
+  "producer": "TAX",
+  "consumer": "DOC",
+  "direction": "downstream",
+  "flow": "downstream"
 }
 ```
 
-Live amounts after Excel upload come from the filing engine, not the static sample.
+Live amounts after Excel upload come from the filing engine, not only the static sample.
 
 ---
 
-## 6. Reverse contracts and issue resolution
+## 7. Reverse (upstream) contracts and issue resolution
 
-| Reverse contract | Flow | Typical issue / requirement |
-|------------------|------|-----------------------------|
-| CT-05 | CAM → MAD | Entity or account mapping gap |
-| CT-08 | TIM → MAD | Tax attribute correction |
-| CT-09 | TIM → CAM | Book-to-tax reconciliation request |
-| CT-12 | RPAM → MAD | Ownership validation issue |
-| CT-13 | RPAM → TIM | Adjusted tax amount needed |
-| CT-15 | FORMS → MAD | Legal name / EIN needed |
-| CT-16 | FORMS → TIM | Tax line amounts needed |
-| CT-17 | FORMS → RPAM | Partner capital restatement needed |
+| Contract | Flow | Typical issue / requirement |
+|----------|------|-----------------------------|
+| CT-05 | ACC → MDM | Entity or account mapping gap |
+| CT-08 | TAX → MDM | Tax attribute correction |
+| CT-09 | TAX → ACC | Book-to-tax reconciliation request |
+| CT-12 | ALC → MDM | Ownership validation issue |
+| CT-13 | ALC → TAX | Adjusted tax amount needed |
+| CT-15 | DOC → MDM | Legal name / EIN needed |
+| CT-16 | DOC → TAX | Tax line amounts needed |
+| CT-17 | DOC → ALC | Partner capital restatement needed |
 
 **Recommended sequence:** inspect issue → correct owning service data → `POST /api/filing/issues/{id}/resolve` → revalidate / re-run affected steps → confirm downstream artifact.
 
 ---
 
-## 7. Excel templates and upload APIs
+## 8. Excel templates and upload APIs
 
 | Module | Workbook / sheet | Required columns or rules |
 |--------|------------------|---------------------------|
@@ -210,88 +261,93 @@ Five demo data sets: `testdata/set-01` … `testdata/set-05`. Regenerate: `npm r
 - **set-01** — compact baseline (2 partners, 7 TB accounts)  
 - **set-02…05** — dynamic partners (3–5) and full Schedule L/K/M-1 trial balance (~26 accounts)
 
-**Entity name** is established by the **CEM** upload (`entityName`) and shown on the engagement banner and CEM flow card. MAD supplies EIN and partner capital detail.
+**Entity name** is established by the **CLM** upload (`entityName`) and shown on the engagement banner. MDM supplies EIN and partner capital detail.
 
-### CEM upload example
+### CLM upload example
 
 ```bash
-curl -X POST "http://127.0.0.1:4100/api/filing/upload/cem" \
+curl -X POST "http://127.0.0.1:4100/api/filing/upload/clm" \
   -F "file=@testdata/set-01/clm.xlsx"
 ```
 
-Multipart field name is **`file`**. Equivalent: `/api/filing/upload/mad`, `/api/filing/upload/cam`.
+Multipart field name is **`file`**. Also: `/api/filing/upload/mdm`, `/api/filing/upload/acc`.
 
 ### Direct service upload routes
 
 ```
-CEM:  POST http://127.0.0.1:4101/upload
-MAD:  POST http://127.0.0.1:4102/upload
-CAM:  POST http://127.0.0.1:4103/upload
+CLM:  POST http://127.0.0.1:4101/upload
+MDM:  POST http://127.0.0.1:4102/upload
+ACC:  POST http://127.0.0.1:4103/upload
 ```
+
+ZIP downloads: `/download/testdata.zip`, `/download/testdata/set-01.zip`, …
 
 ---
 
-## 8. Quality gates and business validations
+## 9. Quality gates and business validations
 
 | Gate | Boundary | Validation focus |
 |------|----------|------------------|
-| AQG1 | CEM → MAD | Engagement/entity identity and master data |
-| AQG2 | MAD/CAM → TIM | Ownership, accounts, mapping readiness |
-| AQG3 | TIM calculation | M-1 identity, tax computation status |
-| AQG4 | TIM → RPAM → Forms | Allocation / K-1 reconcile to TIM |
+| AQG1 | CLM → MDM | Engagement/entity identity and master data |
+| AQG2 | MDM/ACC → TAX | Ownership, accounts, mapping readiness |
+| AQG3 | TAX calculation | M-1 identity, tax computation status |
+| AQG4 | TAX → ALC → DOC | Allocation / K-1 reconcile to TAX |
 | AQG5 | Full transaction / MeF | End-to-end filing readiness |
 
-### TIM business validation (examples)
+### TAX business validation (examples)
 
-- CEM / MAD / CAM prerequisites present  
+- CLM / MDM / ACC prerequisites present  
 - Tax year and EIN format  
 - Account **4000** required; 5000 / 6100 / 6200 recommended  
 - No duplicate account codes  
 - State apportionment factors sum to 1.00  
 - Schedule M-1 rolls to ordinary business income  
 
-APIs: `GET /api/filing/validate/tim`, `POST /api/filing/tim/calculate`, or TIM service `GET /validate`, `POST /calculate`.
+APIs: `GET /api/filing/validate/tax`, `POST /api/filing/tax/calculate`, or TAX service `GET /validate`, `POST /calculate`.
 
-### RPAM business validation (examples)
+### ALC business validation (examples)
 
 - ≥ 2 partners; unique partner / capital IDs  
 - Ownership, profit, and loss % each total 100%  
-- Allocated ordinary (and GP) reconcile to TIM  
+- Allocated ordinary (and GP) reconcile to TAX  
 - Capital rollforward consistency  
 
-APIs: `GET /api/filing/validate/rpam`, `POST /api/filing/rpam/allocate`, or RPAM service `GET /validate`, `POST /allocate`.
+APIs: `GET /api/filing/validate/alc`, `POST /api/filing/alc/allocate`, or ALC service `GET /validate`, `POST /allocate`.
 
-Failed validation returns **HTTP 422** with a findings list and does not advance Forms Print until corrected.
+Failed validation returns **HTTP 422** with a findings list and does not advance DOC until corrected.
 
 ---
 
-## 9. Gateway and common service endpoints
+## 10. Gateway and common service endpoints
 
 | Scope | Method | Path | Purpose |
 |-------|--------|------|---------|
 | Gateway | GET | `/api/health` | Gateway and services health |
 | Gateway | GET | `/api/architecture` | Services, contract catalog, matrix |
+| Gateway | GET | `/api/flow` | Downstream + upstream catalog |
+| Gateway | GET | `/api/contracts` | Filtered contract list |
 | Gateway | GET | `/api/contracts/{id}` | Contract metadata and sample payload |
 | Gateway | GET | `/openapi.json` | OpenAPI 3.0 document |
 | Gateway | GET | `/api-docs` | Swagger UI |
 | Each service | GET | `/health` | Liveness and contract IDs |
 | Each service | GET | `/contracts` | Produced/consumed lists |
+| Each service | GET | `/flow` | Direction peers |
 | Each service | GET | `/pipeline` | Reachability for consumed producers |
 | Each service | GET | `/consume/{contractId}` | Fetch a consumed producer payload |
 | Producer | GET | `/contracts/ct-XX/...` | Producer payload for a contract |
 
-Gateway proxy form: `/api/proxy/{CEM|MAD|CAM|TIM|RPAM|FORMS|A|B|C|D|E}/…`  
-Example: `GET /api/proxy/C/health` ≡ `GET /api/proxy/TIM/health`.
+Gateway proxy: `/api/proxy/{CLM|MDM|ACC|TAX|ALC|DOC|A|B|C|D|E|CEM|…}/…`  
+Example: `GET /api/proxy/C/health` ≡ `GET /api/proxy/TAX/health`.
 
 ---
 
-## 10. Error handling and troubleshooting
+## 11. Error handling and troubleshooting
 
 | HTTP status | Meaning | Action |
 |-------------|---------|--------|
-| 400 | Bad request / Excel / missing CEM before MAD or CEM+MAD before CAM | Fix upload order or file content |
+| 400 | Bad request / Excel / missing CLM before MDM or CLM+MDM before ACC | Fix upload order or file content |
 | 404 | Unknown contract/service, or consume of a CT the service does not consume | Check IDs and consumer relationship |
-| 422 | TIM/RPAM business validation failed | Read `findings` / `validation` in body |
+| 422 | TAX/ALC business validation failed | Read `findings` / `validation` in body |
 | 502 | Producer unreachable during consume or pipeline | Check producer health, port, logs |
 | 500 | Unexpected server error | Inspect logs; correlate request |
 
@@ -305,11 +361,9 @@ Example error payload:
 }
 ```
 
-A failed request does not by itself prove a business transaction was rolled back.
-
 ---
 
-## 11. API automation and CI validation
+## 12. API automation and CI validation
 
 ### Contract suite
 
@@ -325,10 +379,11 @@ Asserts producer endpoints return `contractId` plus required payload keys.
 |-------|----------|
 | 1. Health | Gateway and all six services |
 | 2. Producer contract | CT-00…CT-17 schema / IDs |
-| 3. Consumer integration | `/consume/{id}` for configured contracts |
-| 4. Reverse-contract tests | Issue payloads and resolve workflow |
-| 5. Business validations | TIM/RPAM validate + ownership / M-1 rules |
-| 6. End-to-end | Upload CEM→MAD→CAM → forms/package |
+| 3. Consumer integration | `/consume/{id}` and `/consume/downstream` |
+| 4. Upstream / reverse | Issue payloads and resolve workflow |
+| 5. Business validations | TAX/ALC validate + ownership / M-1 rules |
+| 6. End-to-end | Upload CLM→MDM→ACC → forms/package |
+| 7. Flow APIs | `/api/flow` and peer downstream/upstream |
 
 ### Playwright API test example
 
@@ -353,7 +408,7 @@ Avoid `POST /api/filing/reset` against shared environments.
 
 ---
 
-## 12. Security, observability and production-readiness checklist
+## 13. Security, observability and production-readiness checklist
 
 - Document authentication/authorization if required in deployed environments.  
 - Keep OpenAPI schemas, required/nullable fields, and examples current.  
@@ -364,21 +419,22 @@ Avoid `POST /api/filing/reset` against shared environments.
 - Document timeouts, dependency health, and failure behavior.  
 - Version contracts; define backward-compatibility rules.  
 - Restrict demo **reset** from production access.  
-- Use environment-specific base URLs — do not hardcode localhost in prod.
+- Use environment-specific base URLs — OpenAPI prefers same-origin `/` behind proxies; set `PUBLIC_BASE_URL` when needed.
 
 ---
 
-## 13. Related files and quick reference
+## 14. Related files and quick reference
 
 | File | Purpose |
 |------|---------|
 | `APPLICATION_MANUAL.md` | Installation, UI walkthrough, demo script |
 | `ARCHITECTURE.md` | Microservice and contract architecture |
 | `API.md` | Condensed API reference |
-| `CASE_STUDY.md` | Business case-study requirements (if present) |
+| `../CASE_STUDY.md` | Business case-study brief |
+| `../README.md` | Project overview & quick start |
 | `postman/TaxMesh.postman_collection.json` | Postman collection |
 | `openapi.json` | Machine-readable OpenAPI |
-| `testdata/set-0N/*.xlsx` | Demo Excel workbooks |
+| `testdata/set-0N/{clm,mdm,acc}.xlsx` | Demo Excel workbooks |
 
 ### Quick reference
 
@@ -388,15 +444,19 @@ Swagger:       /api-docs
 OpenAPI:       /openapi.json
 Health:        /api/health
 Architecture:  /api/architecture
+Data flow:     /api/flow
 Filing:        /api/filing
-Validate TIM:  /api/filing/validate/tim
-Validate RPAM: /api/filing/validate/rpam
+Upload:        /api/filing/upload/{clm|mdm|acc}
+Validate TAX:  /api/filing/validate/tax
+Validate ALC:  /api/filing/validate/alc
 Contracts:     CT-00 through CT-17
-Letters:       A=MAD B=CAM C=TIM D=RPAM E=FORMS
+Letters:       A=MDM B=ACC C=TAX D=ALC E=DOC
+Codes:         CLM MDM ACC TAX ALC DOC
 Contract test: npm run test:contracts
 Excel regen:   npm run generate:excel
+Guide DOCX:    npm run generate:guide
 ```
 
 ---
 
-*End of document. Version 1.1 — reflects upload-driven flow, blank reset, CEM entityName, TIM/RPAM business validation, and A–E proxy aliases.*
+*End of document. Version 1.2 — CLM/MDM/ACC/TAX/ALC/DOC codes, clm/mdm/acc.xlsx testdata, downstream/upstream flow APIs, blank reset, entityName, TAX/ALC validation, A–E + legacy proxy aliases, tunnel-safe Swagger.*

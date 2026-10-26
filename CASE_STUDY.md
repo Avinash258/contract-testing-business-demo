@@ -6,24 +6,27 @@ References:
 
 ## Journey under test
 
-**CEM → MAD → CAM → TIM → RPAM → ERE / Forms Print → MeF**
+**CLM → MDM → ACC → TAX → ALC → DOC / MeF**
 
-| Module | TaxMesh | Responsibility |
-|--------|---------|----------------|
-| CEM | Gateway `/api/filing` | Engagement, project, job, correlation ID |
-| MAD | Service A | Legal entities, ownership, SALT |
-| CAM | Service B | Chart of accounts, mappings → TIM sync |
-| TIM | Service C | Book-to-tax, federal/state recalculation |
-| RPAM | Service D | Partner capital / allocate & tier |
-| Forms Print | Service E | 1065 / K-1 / K-3 package + MeF |
+| Workspace | Code | TaxMesh | Responsibility |
+|-----------|------|---------|----------------|
+| Client Management | **CLM** | `:4101` + `/api/filing` | Engagement, project, job, entity name, correlation ID |
+| Master Data | **MDM** (A) | `:4102` | Legal entities, ownership, SALT |
+| Accounting | **ACC** (B) | `:4103` | Chart of accounts, mappings → TAX sync |
+| Tax Computation | **TAX** (C) | `:4104` | Book-to-tax, federal/state recalculation |
+| Allocations | **ALC** (D) | `:4105` | Partner capital / allocate & tier |
+| Forms & Documents | **DOC** (E) | `:4106` | 1065 / K-1 / K-3 package + MeF |
 
-**Contracts:** CT-01…CT-17 (9 downstream + 8 reverse) keep producer/consumer shapes stable across the mesh.
+Legacy case-study labels CEM/MAD/CAM/TIM/RPAM/FORMS map 1:1 to the codes above.
+
+**Contracts:** CT-00…CT-17 (**10 downstream** + **8 upstream/reverse**) keep producer/consumer shapes stable across the mesh.  
+**Flow APIs:** `GET /api/flow`, `/api/proxy/{svc}/downstream|{upstream}/{peer}`.
 
 ## Demo proof
 
 ```bash
 npm start
-# UI http://127.0.0.1:4100 — Run full journey
+# UI http://127.0.0.1:4100 — upload CLM → MDM → ACC
 # AQG1–AQG5 → passed · status → efiled
-npm run test:contracts   # 17/17
+npm run test:contracts
 ```

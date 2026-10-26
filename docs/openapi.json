@@ -10,12 +10,12 @@
   },
   "servers": [
     {
-      "url": "http://127.0.0.1:4100",
-      "description": "Local gateway"
+      "url": "/",
+      "description": "This host (same origin)"
     },
     {
-      "url": "http://localhost:4100",
-      "description": "Localhost alias"
+      "url": "http://127.0.0.1:4100",
+      "description": "Local gateway only"
     }
   ],
   "tags": [
