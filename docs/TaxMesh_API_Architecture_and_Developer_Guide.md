@@ -201,9 +201,9 @@ Live amounts after Excel upload come from the filing engine, not the static samp
 
 | Module | Workbook / sheet | Required columns or rules |
 |--------|------------------|---------------------------|
-| CEM | `cem.xlsx` · Engagement | clientId, engagementId, projectId, entityGroupId, jobId, **entityName**, taxYear, dueDate, formType, jurisdiction, states |
-| MAD | `mad.xlsx` · Entity + Partners | Entity + partners; ownership totals **100%** |
-| CAM | `cam.xlsx` · TrialBalance | accountCode, accountName, bookAmount, schedule (driver codes 4000/5000/6100/6200 used by TIM) |
+| CLM | `clm.xlsx` · Engagement | clientId, engagementId, projectId, entityGroupId, jobId, **entityName**, taxYear, dueDate, formType, jurisdiction, states |
+| MDM | `mdm.xlsx` · Entity + Partners | Entity + partners; ownership totals **100%** |
+| ACC | `acc.xlsx` · TrialBalance | accountCode, accountName, bookAmount, schedule (driver codes 4000/5000/6100/6200 used by TAX) |
 
 Five demo data sets: `testdata/set-01` … `testdata/set-05`. Regenerate: `npm run generate:excel`.
 
@@ -216,7 +216,7 @@ Five demo data sets: `testdata/set-01` … `testdata/set-05`. Regenerate: `npm r
 
 ```bash
 curl -X POST "http://127.0.0.1:4100/api/filing/upload/cem" \
-  -F "file=@testdata/set-01/cem.xlsx"
+  -F "file=@testdata/set-01/clm.xlsx"
 ```
 
 Multipart field name is **`file`**. Equivalent: `/api/filing/upload/mad`, `/api/filing/upload/cam`.

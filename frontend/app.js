@@ -2,47 +2,47 @@ const state = {
   health: null,
   filing: null,
   datasets: null,
-  module: 'CEM',
+  module: 'CLM',
 };
 
 const MODULES = {
-  CEM: {
-    title: 'CEM — Client Engagement',
-    eyebrow: 'Module',
-    hint: 'Creates engagement, project, entity group and job. Feeds MAD, CAM and TIM.',
+  CLM: {
+    title: 'CLM — Client Management',
+    eyebrow: 'Workspace',
+    hint: 'Creates engagement, project, entity group and job. Feeds MDM, ACC and TAX.',
     port: 4101,
-    upload: 'cem',
+    upload: 'clm',
   },
-  MAD: {
-    title: 'MAD — Master Data',
-    eyebrow: 'Module',
-    hint: 'Legal entity, partners and ownership. Needs CEM. Feeds CAM and TIM.',
+  MDM: {
+    title: 'MDM — Master Data',
+    eyebrow: 'Workspace',
+    hint: 'Legal entity, partners and ownership. Needs CLM. Feeds ACC and TAX.',
     port: 4102,
-    upload: 'mad',
+    upload: 'mdm',
   },
-  CAM: {
-    title: 'CAM — Accounting',
-    eyebrow: 'Module',
-    hint: 'Trial balance / chart of accounts. Needs CEM + MAD. Feeds TIM and RPAM.',
+  ACC: {
+    title: 'ACC — Accounting',
+    eyebrow: 'Workspace',
+    hint: 'Trial balance / chart of accounts. Needs CLM + MDM. Feeds TAX and ALC.',
     port: 4103,
-    upload: 'cam',
+    upload: 'acc',
   },
-  TIM: {
-    title: 'TIM — Tax Engine',
-    eyebrow: 'Module',
-    hint: 'Business-validated federal / state calculation. Consumes CEM + MAD + CAM. Feeds RPAM and Forms Print.',
+  TAX: {
+    title: 'TAX — Tax Computation',
+    eyebrow: 'Workspace',
+    hint: 'Business-validated federal / state calculation. Consumes CLM + MDM + ACC. Feeds ALC and Forms & Documents.',
     port: 4104,
   },
-  RPAM: {
-    title: 'RPAM — Allocations',
-    eyebrow: 'Module',
-    hint: 'Business-validated partner capital and K-1 amounts. Consumes MAD + CAM + TIM. Feeds Forms Print.',
+  ALC: {
+    title: 'ALC — Allocations',
+    eyebrow: 'Workspace',
+    hint: 'Business-validated partner capital and K-1 amounts. Consumes MDM + ACC + TAX. Feeds Forms & Documents.',
     port: 4105,
   },
-  FORMS: {
-    title: 'Forms Print',
-    eyebrow: 'Module',
-    hint: 'Form 1065 / K-1 / K-3 package. Consumes CEM + MAD + TIM + RPAM.',
+  DOC: {
+    title: 'DOC — Forms & Documents',
+    eyebrow: 'Workspace',
+    hint: 'Form 1065 / K-1 / K-3 package. Consumes CLM + MDM + TAX + ALC.',
     port: 4106,
   },
 };
@@ -139,7 +139,7 @@ function renderFlow() {
   const df = f.dataFlow || { nodes: [], edges: [] };
   document.getElementById('flowNodes').innerHTML = df.nodes
     .map(
-      (n) => `<button type="button" class="flow-node ${n.status}" data-goto-module="${n.id === 'Forms Print' ? 'FORMS' : n.id}">
+      (n) => `<button type="button" class="flow-node ${n.status}" data-goto-module="${n.id}">
       <div class="id">${n.label}</div>
       <div class="detail">${n.detail}</div>
       <div class="meta">${n.status}${n.feeds?.length ? ` → ${n.feeds.join(', ')}` : ''}</div>
@@ -159,7 +159,7 @@ function renderFlow() {
 function renderModule(id) {
   const f = state.filing || {};
   const meta = MODULES[id];
-  const node = (f.dataFlow?.nodes || []).find((n) => n.id === id || (id === 'FORMS' && n.id === 'Forms Print'));
+  const node = (f.dataFlow?.nodes || []).find((n) => n.id === id);
   const svcHealth = (state.health?.services || []).find((s) => s.id === id);
 
   document.getElementById('moduleHeading').textContent = meta.title;
@@ -194,7 +194,7 @@ function renderModule(id) {
   }
 
   const body = document.getElementById('moduleBody');
-  if (id === 'CEM') {
+  if (id === 'CLM') {
     body.innerHTML = `<dl class="kv">
       <dt>Client</dt><dd>${f.clientId || '—'}</dd>
       <dt>Engagement</dt><dd>${f.engagementId || '—'}</dd>
@@ -204,7 +204,7 @@ function renderModule(id) {
       <dt>Correlation</dt><dd>${f.correlationId || '—'}</dd>
       <dt>States</dt><dd>${(f.states || []).join(', ') || '—'}</dd>
     </dl>`;
-  } else if (id === 'MAD') {
+  } else if (id === 'MDM') {
     body.innerHTML = `<dl class="kv">
       <dt>Entity</dt><dd>${f.entity?.legalName || '—'}</dd>
       <dt>EIN</dt><dd>${f.entity?.ein || '—'}</dd>
@@ -216,29 +216,29 @@ function renderModule(id) {
       .map((p) => `<tr><td>${p.name}</td><td>${p.ownershipPct}%</td><td class="num">${money(p.beginningCapital)}</td></tr>`)
       .join('') || '<tr><td colspan="3">No partners loaded</td></tr>'}
     </tbody></table>`;
-  } else if (id === 'CAM') {
+  } else if (id === 'ACC') {
     body.innerHTML = `<table class="partners"><thead><tr><th>Acct</th><th>Name</th><th>Book</th><th>Sch</th></tr></thead><tbody>
     ${(f.trialBalance || [])
       .map(
         (r) =>
           `<tr><td>${r.accountCode}</td><td>${r.accountName}</td><td class="num">${money(r.bookAmount)}</td><td>${r.schedule}</td></tr>`
       )
-      .join('') || '<tr><td colspan="4">Upload CAM Excel after CEM + MAD</td></tr>'}
+      .join('') || '<tr><td colspan="4">Upload ACC Excel after CLM + MDM</td></tr>'}
     </tbody></table>`;
-  } else if (id === 'TIM') {
-    const v = f.validations?.tim;
+  } else if (id === 'TAX') {
+    const v = f.validations?.tax;
     const states = Object.entries(f.taxComputation?.stateTaxableIncome || {})
       .map(([st, amt]) => `${st} ${money(amt)}`)
       .join(' · ');
     body.innerHTML = `
       <div class="module-actions">
-        <button type="button" class="btn small" id="timValidateBtn">Run TIM validation</button>
+        <button type="button" class="btn small" id="timValidateBtn">Run TAX validation</button>
         <button type="button" class="btn small primary" id="timCalcBtn">Calculate tax</button>
       </div>
-      ${renderValidationPanel(v, 'TIM')}
+      ${renderValidationPanel(v, 'TAX')}
       ${
         !f.taxComputation
-          ? '<p class="muted">Waiting for CEM + MAD + CAM. Upload CAM (or click Calculate) after validation passes.</p>'
+          ? '<p class="muted">Waiting for CLM + MDM + ACC. Upload ACC (or click Calculate) after validation passes.</p>'
           : `<dl class="kv">
         <dt>Ordinary income</dt><dd>${money(f.taxComputation.ordinaryBusinessIncome)}</dd>
         <dt>Federal taxable</dt><dd>${money(f.taxComputation.federalTaxableIncome)}</dd>
@@ -255,24 +255,24 @@ function renderModule(id) {
       </tbody></table>`
       }`;
     document.getElementById('timValidateBtn')?.addEventListener('click', () => {
-      runModuleAction('tim-validate').catch((err) => alert(err.message));
+      runModuleAction('tax-validate').catch((err) => alert(err.message));
     });
     document.getElementById('timCalcBtn')?.addEventListener('click', () => {
-      runModuleAction('tim-calculate').catch((err) => alert(err.message));
+      runModuleAction('tax-calculate').catch((err) => alert(err.message));
     });
-  } else if (id === 'RPAM') {
-    const v = f.validations?.rpam;
+  } else if (id === 'ALC') {
+    const v = f.validations?.alc;
     const recon = f.allocations?.reconciliation;
     body.innerHTML = `
       <div class="module-actions">
-        <button type="button" class="btn small" id="rpamValidateBtn">Run RPAM validation</button>
+        <button type="button" class="btn small" id="rpamValidateBtn">Run ALC validation</button>
         <button type="button" class="btn small primary" id="rpamAllocBtn">Allocate partners</button>
       </div>
-      ${renderValidationPanel(v, 'RPAM')}
+      ${renderValidationPanel(v, 'ALC')}
       ${
         !f.allocations
-          ? '<p class="muted">Waiting for TIM calculation (and passing RPAM ownership rules).</p>'
-          : `<p class="hint">Reconciles to TIM: ${recon?.reconcilesToTim ? 'PASS' : 'FAIL'} · GP: ${
+          ? '<p class="muted">Waiting for TAX calculation (and passing ALC ownership rules).</p>'
+          : `<p class="hint">Reconciles to TAX: ${recon?.reconcilesToTim ? 'PASS' : 'FAIL'} · GP: ${
               recon?.gpReconciles ? 'PASS' : 'FAIL'
             } · GP partner: ${recon?.gpPartnerId || '—'}</p>
       <table class="partners"><thead><tr><th>Partner</th><th>Own%</th><th>Ordinary</th><th>GP</th><th>Ending capital</th></tr></thead><tbody>
@@ -287,12 +287,12 @@ function renderModule(id) {
       </tbody></table>`
       }`;
     document.getElementById('rpamValidateBtn')?.addEventListener('click', () => {
-      runModuleAction('rpam-validate').catch((err) => alert(err.message));
+      runModuleAction('alc-validate').catch((err) => alert(err.message));
     });
     document.getElementById('rpamAllocBtn')?.addEventListener('click', () => {
-      runModuleAction('rpam-allocate').catch((err) => alert(err.message));
+      runModuleAction('alc-allocate').catch((err) => alert(err.message));
     });
-  } else if (id === 'FORMS') {
+  } else if (id === 'DOC') {
     body.innerHTML = `<dl class="kv">
       <dt>Package</dt><dd>${f.printPackage?.packageId || '—'}</dd>
       <dt>Status</dt><dd>${f.printPackage?.status || '—'}</dd>
@@ -305,26 +305,63 @@ function renderModule(id) {
       .join('')}</ul>`;
   }
 
-  const consumedKey = id === 'FORMS' ? 'FORMS' : id;
+  const consumedKey = id;
   const consumed = f.dataFlow?.consumedBy?.[consumedKey] || f.published?.[id.toLowerCase()] || null;
-  document.getElementById('moduleSide').textContent = JSON.stringify(
-    {
-      health: svcHealth
-        ? { id: svcHealth.id, port: svcHealth.port, healthy: svcHealth.healthy }
-        : null,
-      flowNode: node || null,
-      validation: id === 'TIM' ? f.validations?.tim : id === 'RPAM' ? f.validations?.rpam : null,
-      consumed: consumed,
-      import: f.imports?.[id.toLowerCase()] || null,
-    },
-    null,
-    2
-  );
+  const sideEl = document.getElementById('moduleSide');
+  sideEl.textContent = 'Loading flow APIs…';
+  api(`/api/proxy/${id}/flow`)
+    .then((flow) => {
+      sideEl.textContent = JSON.stringify(
+        {
+          health: svcHealth
+            ? { id: svcHealth.id, port: svcHealth.port, healthy: svcHealth.healthy }
+            : null,
+          flowNode: node || null,
+          validation: id === 'TAX' ? f.validations?.tax : id === 'ALC' ? f.validations?.alc : null,
+          import: f.imports?.[id.toLowerCase()] || null,
+          downstream: {
+            peersOut: flow.downstream?.peersOut || [],
+            peersIn: flow.downstream?.peersIn || [],
+            produced: (flow.downstream?.produced || []).map((c) => `${c.id} → ${c.consumer}`),
+            consumeUrl: `/api/proxy/${id}/consume/downstream`,
+          },
+          upstream: {
+            peersOut: flow.upstream?.peersOut || [],
+            peersIn: flow.upstream?.peersIn || [],
+            produced: (flow.upstream?.produced || []).map((c) => `${c.id} → ${c.consumer}`),
+            consumeUrl: `/api/proxy/${id}/consume/upstream`,
+          },
+          endpoints: {
+            flow: `/api/proxy/${id}/flow`,
+            downstreamPeer: `/api/proxy/${id}/downstream/{peer}`,
+            upstreamPeer: `/api/proxy/${id}/upstream/{peer}`,
+            gatewayPair: `/api/flow/downstream|upstream/${id}/{peer}`,
+          },
+          consumed,
+        },
+        null,
+        2
+      );
+    })
+    .catch((err) => {
+      sideEl.textContent = JSON.stringify(
+        {
+          health: svcHealth
+            ? { id: svcHealth.id, port: svcHealth.port, healthy: svcHealth.healthy }
+            : null,
+          flowNode: node || null,
+          flowError: err.message,
+          consumed,
+        },
+        null,
+        2
+      );
+    });
 }
 
 function renderValidationPanel(v, label) {
   if (!v) {
-    return `<div class="validation-panel pending"><strong>${label} validation</strong><p class="muted">Not run yet — click Run validation or upload CAM to calculate.</p></div>`;
+    return `<div class="validation-panel pending"><strong>${label} validation</strong><p class="muted">Not run yet — click Run validation or upload ACC to calculate.</p></div>`;
   }
   const tone = v.ok ? 'ok' : 'fail';
   const rows = (v.findings || [])
@@ -364,13 +401,13 @@ function notifyBrief(title, detail) {
 async function runModuleAction(action) {
   let path;
   let method = 'GET';
-  if (action === 'tim-validate') path = '/api/filing/validate/tim';
-  else if (action === 'rpam-validate') path = '/api/filing/validate/rpam';
-  else if (action === 'tim-calculate') {
-    path = '/api/filing/tim/calculate';
+  if (action === 'tax-validate') path = '/api/filing/validate/tax';
+  else if (action === 'alc-validate') path = '/api/filing/validate/alc';
+  else if (action === 'tax-calculate') {
+    path = '/api/filing/tax/calculate';
     method = 'POST';
-  } else if (action === 'rpam-allocate') {
-    path = '/api/filing/rpam/allocate';
+  } else if (action === 'alc-allocate') {
+    path = '/api/filing/alc/allocate';
     method = 'POST';
   } else throw new Error(`Unknown action ${action}`);
 
@@ -427,7 +464,7 @@ function renderForms() {
   const pkgEl = document.getElementById('packageBody');
 
   if (!f.taxComputation && !f.form1065) {
-    formEl.innerHTML = '<p class="muted">Upload CEM → MAD → CAM to generate Form 1065 lines.</p>';
+    formEl.innerHTML = '<p class="muted">Upload CLM → MDM → ACC to generate Form 1065 lines.</p>';
   } else {
     const ordinary = f.form1065?.lines?.ordinaryBusinessIncome ?? f.taxComputation?.ordinaryBusinessIncome;
     formEl.innerHTML = `<dl class="kv">
@@ -487,9 +524,9 @@ function updateDatasetLinks() {
   const id = document.getElementById('datasetSelect').value;
   const ds = (state.datasets?.datasets || []).find((d) => d.id === id);
   if (!ds) return;
-  document.getElementById('dlCem').href = ds.files.cem;
-  document.getElementById('dlMad').href = ds.files.mad;
-  document.getElementById('dlCam').href = ds.files.cam;
+  document.getElementById('dlCem').href = ds.files.clm || ds.files.cem;
+  document.getElementById('dlMad').href = ds.files.mdm || ds.files.mad;
+  document.getElementById('dlCam').href = ds.files.acc || ds.files.cam;
   const zip = ds.downloadZip || `/download/testdata/${id}.zip`;
   const zipLink = document.getElementById('dlSetZip');
   if (zipLink) {
@@ -499,9 +536,9 @@ function updateDatasetLinks() {
   const set = (el, text) => {
     if (el) el.textContent = text;
   };
-  set(document.getElementById('urlCem'), ds.files.cem);
-  set(document.getElementById('urlMad'), ds.files.mad);
-  set(document.getElementById('urlCam'), ds.files.cam);
+  set(document.getElementById('urlCem'), ds.files.clm || ds.files.cem);
+  set(document.getElementById('urlMad'), ds.files.mdm || ds.files.mad);
+  set(document.getElementById('urlCam'), ds.files.acc || ds.files.cam);
   set(document.getElementById('urlSetZip'), zip);
 
   const list = document.getElementById('testdataUrlList');
@@ -512,9 +549,9 @@ function updateDatasetLinks() {
       ...(state.datasets.datasets || []).map(
         (d) =>
           `<li><strong>${d.id}</strong> — ${d.label}<br/>
-            <a href="${d.files.cem}" download>cem.xlsx</a> ·
-            <a href="${d.files.mad}" download>mad.xlsx</a> ·
-            <a href="${d.files.cam}" download>cam.xlsx</a> ·
+            <a href="${d.files.clm || d.files.cem}" download>clm.xlsx</a> ·
+            <a href="${d.files.mdm || d.files.mad}" download>mdm.xlsx</a> ·
+            <a href="${d.files.acc || d.files.cam}" download>acc.xlsx</a> ·
             <a href="${d.downloadZip || `/download/testdata/${d.id}.zip`}" download>ZIP</a>
             <div class="muted mono small-url">${d.downloadZip || `/download/testdata/${d.id}.zip`}</div>
           </li>`
@@ -536,23 +573,23 @@ async function loadDatasetFilesIntoInputs() {
   const ds = (state.datasets?.datasets || []).find((d) => d.id === id);
   if (!ds) return;
   updateDatasetLinks();
-  const cem = await toFile(ds.files.cem, `${id}-cem.xlsx`);
-  const mad = await toFile(ds.files.mad, `${id}-mad.xlsx`);
-  const cam = await toFile(ds.files.cam, `${id}-cam.xlsx`);
+  const clm = await toFile(ds.files.clm || ds.files.cem, `${id}-clm.xlsx`);
+  const mdm = await toFile(ds.files.mdm || ds.files.mad, `${id}-mdm.xlsx`);
+  const acc = await toFile(ds.files.acc || ds.files.cam, `${id}-acc.xlsx`);
   const a = new DataTransfer();
-  a.items.add(cem);
+  a.items.add(clm);
   document.getElementById('fileCem').files = a.files;
   const b = new DataTransfer();
-  b.items.add(mad);
+  b.items.add(mdm);
   document.getElementById('fileMad').files = b.files;
   const c = new DataTransfer();
-  c.items.add(cam);
+  c.items.add(acc);
   document.getElementById('fileCam').files = c.files;
   document.getElementById('uploadOut').textContent = `${id} loaded. Click Upload all 3 & process.`;
 }
 
 async function uploadModule(module) {
-  const inputId = module === 'cem' ? 'fileCem' : module === 'mad' ? 'fileMad' : 'fileCam';
+  const inputId = module === 'clm' || module === 'cem' ? 'fileCem' : module === 'mdm' || module === 'mad' ? 'fileMad' : 'fileCam';
   const input = document.getElementById(inputId);
   const out = document.getElementById('uploadOut');
   if (!input.files?.length) throw new Error(`Choose a .xlsx for ${module.toUpperCase()} first`);
@@ -579,16 +616,16 @@ async function uploadModule(module) {
 }
 
 async function uploadAllAndProcess() {
-  await uploadModule('cem');
-  await uploadModule('mad');
-  await uploadModule('cam');
+  await uploadModule('clm');
+  await uploadModule('mdm');
+  await uploadModule('acc');
 }
 
 async function resetFiling() {
   state.filing = await api('/api/filing/reset', { method: 'POST' });
   renderFlow();
   renderForms();
-  document.getElementById('uploadOut').textContent = 'Engagement reset. Upload CEM → MAD → CAM.';
+  document.getElementById('uploadOut').textContent = 'Engagement reset. Upload CLM → MDM → ACC.';
 }
 
 function wire() {

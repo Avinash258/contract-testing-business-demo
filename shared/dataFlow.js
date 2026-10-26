@@ -1,37 +1,45 @@
 /**
  * Upload-driven taxation data flow (no contract-testing UI).
  *
- * CEM + MAD uploads  → consumed by CAM and TIM
- * CAM upload         → joins CEM + MAD + CAM books → feeds TIM and RPAM
- * TIM + RPAM calc    → feeds Forms Print
+ * CLM + MDM uploads  → consumed by ACC and TAX
+ * ACC upload         → joins CLM + MDM + ACC books → feeds TAX and ALC
+ * TAX + ALC calc     → feeds Forms & Documents (DOC)
  */
 
 /** Upload-driven readiness — seeded demo rows alone do not light up the flow. */
-function hasCem(s) {
-  return !!(s.imports?.cem || s.correlationId);
+function hasClm(s) {
+  return !!(s.imports?.clm || s.imports?.cem || s.correlationId);
 }
 
-function hasMad(s) {
-  return !!(s.imports?.mad);
+function hasMdm(s) {
+  return !!(s.imports?.mdm || s.imports?.mad);
 }
 
-function hasCam(s) {
-  return !!(s.imports?.cam);
+function hasAcc(s) {
+  return !!(s.imports?.acc || s.imports?.cam);
 }
 
-function hasTim(s) {
+function hasTax(s) {
   return !!s.taxComputation;
 }
 
-function hasRpam(s) {
+function hasAlc(s) {
   return !!s.allocations;
 }
 
-function hasForms(s) {
+function hasDoc(s) {
   return !!s.printPackage;
 }
 
-function cemPayload(s) {
+// Back-compat aliases used by filingEngine
+const hasCem = hasClm;
+const hasMad = hasMdm;
+const hasCam = hasAcc;
+const hasTim = hasTax;
+const hasRpam = hasAlc;
+const hasForms = hasDoc;
+
+function clmPayload(s) {
   return {
     clientId: s.clientId,
     engagementId: s.engagementId,
@@ -48,116 +56,122 @@ function cemPayload(s) {
   };
 }
 
-function madPayload(s) {
+const cemPayload = clmPayload;
+
+function mdmPayload(s) {
   return {
     entity: s.entity,
     partners: s.partners,
   };
 }
 
-function camPayload(s) {
+const madPayload = mdmPayload;
+
+function accPayload(s) {
   return {
     trialBalance: s.trialBalance,
     accountMaps: s.accountMaps,
   };
 }
 
+const camPayload = accPayload;
+
 function buildDataFlow(s) {
   const nodes = [
     {
-      id: 'CEM',
-      label: 'CEM',
-      status: hasCem(s) ? 'ready' : 'empty',
-      detail: hasCem(s)
+      id: 'CLM',
+      label: 'CLM',
+      status: hasClm(s) ? 'ready' : 'empty',
+      detail: hasClm(s)
         ? s.entityName || s.entity?.legalName || s.engagementId
-        : 'Upload CEM Excel',
-      feeds: ['MAD', 'CAM', 'TIM'],
+        : 'Upload CLM Excel',
+      feeds: ['MDM', 'ACC', 'TAX'],
     },
     {
-      id: 'MAD',
-      label: 'MAD',
-      status: hasMad(s) ? 'ready' : 'empty',
-      detail: hasMad(s)
+      id: 'MDM',
+      label: 'MDM',
+      status: hasMdm(s) ? 'ready' : 'empty',
+      detail: hasMdm(s)
         ? `${s.partners?.length || 0} partners · ${s.entity?.ein || 'EIN pending'}`
-        : 'Upload MAD Excel (needs CEM)',
-      feeds: ['CAM', 'TIM'],
-      needs: ['CEM'],
+        : 'Upload MDM Excel (needs CLM)',
+      feeds: ['ACC', 'TAX'],
+      needs: ['CLM'],
     },
     {
-      id: 'CAM',
-      label: 'CAM',
-      status: hasCam(s) ? 'ready' : 'empty',
-      detail: hasCam(s) ? `${s.trialBalance.length} accounts` : 'Upload CAM Excel (needs CEM+MAD)',
-      feeds: ['TIM', 'RPAM'],
-      needs: ['CEM', 'MAD'],
+      id: 'ACC',
+      label: 'ACC',
+      status: hasAcc(s) ? 'ready' : 'empty',
+      detail: hasAcc(s) ? `${s.trialBalance.length} accounts` : 'Upload ACC Excel (needs CLM+MDM)',
+      feeds: ['TAX', 'ALC'],
+      needs: ['CLM', 'MDM'],
     },
     {
-      id: 'TIM',
-      label: 'TIM',
-      status: hasTim(s) ? 'ready' : hasCam(s) && hasMad(s) && hasCem(s) ? 'waiting' : 'blocked',
-      detail: hasTim(s)
+      id: 'TAX',
+      label: 'TAX',
+      status: hasTax(s) ? 'ready' : hasAcc(s) && hasMdm(s) && hasClm(s) ? 'waiting' : 'blocked',
+      detail: hasTax(s)
         ? `Ordinary ${s.taxComputation.ordinaryBusinessIncome}`
-        : 'Consumes CEM + MAD + CAM',
-      feeds: ['RPAM', 'FORMS'],
-      needs: ['CEM', 'MAD', 'CAM'],
+        : 'Consumes CLM + MDM + ACC',
+      feeds: ['ALC', 'DOC'],
+      needs: ['CLM', 'MDM', 'ACC'],
     },
     {
-      id: 'RPAM',
-      label: 'RPAM',
-      status: hasRpam(s) ? 'ready' : hasTim(s) ? 'waiting' : 'blocked',
-      detail: hasRpam(s) ? `${s.allocations.partners.length} partners allocated` : 'Consumes TIM + MAD + CAM',
-      feeds: ['FORMS'],
-      needs: ['MAD', 'CAM', 'TIM'],
+      id: 'ALC',
+      label: 'ALC',
+      status: hasAlc(s) ? 'ready' : hasTax(s) ? 'waiting' : 'blocked',
+      detail: hasAlc(s) ? `${s.allocations.partners.length} partners allocated` : 'Consumes TAX + MDM + ACC',
+      feeds: ['DOC'],
+      needs: ['MDM', 'ACC', 'TAX'],
     },
     {
-      id: 'FORMS',
-      label: 'Forms Print',
-      status: hasForms(s) ? 'ready' : hasRpam(s) && hasTim(s) ? 'waiting' : 'blocked',
-      detail: hasForms(s) ? s.printPackage.packageId : 'Consumes TIM + RPAM (+ CEM/MAD identity)',
+      id: 'DOC',
+      label: 'DOC',
+      status: hasDoc(s) ? 'ready' : hasAlc(s) && hasTax(s) ? 'waiting' : 'blocked',
+      detail: hasDoc(s) ? s.printPackage.packageId : 'Consumes TAX + ALC (+ CLM/MDM identity)',
       feeds: [],
-      needs: ['CEM', 'MAD', 'TIM', 'RPAM'],
+      needs: ['CLM', 'MDM', 'TAX', 'ALC'],
     },
   ];
 
   const edges = [
-    { from: 'CEM', to: 'MAD', active: hasCem(s) },
-    { from: 'CEM', to: 'CAM', active: hasCem(s) },
-    { from: 'CEM', to: 'TIM', active: hasCem(s) },
-    { from: 'MAD', to: 'CAM', active: hasMad(s) },
-    { from: 'MAD', to: 'TIM', active: hasMad(s) },
-    { from: 'CAM', to: 'TIM', active: hasCam(s) },
-    { from: 'CAM', to: 'RPAM', active: hasCam(s) },
-    { from: 'TIM', to: 'RPAM', active: hasTim(s) },
-    { from: 'TIM', to: 'FORMS', active: hasTim(s) },
-    { from: 'RPAM', to: 'FORMS', active: hasRpam(s) },
+    { from: 'CLM', to: 'MDM', active: hasClm(s) },
+    { from: 'CLM', to: 'ACC', active: hasClm(s) },
+    { from: 'CLM', to: 'TAX', active: hasClm(s) },
+    { from: 'MDM', to: 'ACC', active: hasMdm(s) },
+    { from: 'MDM', to: 'TAX', active: hasMdm(s) },
+    { from: 'ACC', to: 'TAX', active: hasAcc(s) },
+    { from: 'ACC', to: 'ALC', active: hasAcc(s) },
+    { from: 'TAX', to: 'ALC', active: hasTax(s) },
+    { from: 'TAX', to: 'DOC', active: hasTax(s) },
+    { from: 'ALC', to: 'DOC', active: hasAlc(s) },
   ];
 
   return {
     nodes,
     edges,
     consumedBy: {
-      CAM: {
-        fromCem: hasCem(s) ? cemPayload(s) : null,
-        fromMad: hasMad(s) ? madPayload(s) : null,
-        ownUpload: hasCam(s) ? camPayload(s) : null,
+      ACC: {
+        fromClm: hasClm(s) ? clmPayload(s) : null,
+        fromMdm: hasMdm(s) ? mdmPayload(s) : null,
+        ownUpload: hasAcc(s) ? accPayload(s) : null,
       },
-      TIM: {
-        fromCem: hasCem(s) ? cemPayload(s) : null,
-        fromMad: hasMad(s) ? madPayload(s) : null,
-        fromCam: hasCam(s) ? camPayload(s) : null,
+      TAX: {
+        fromClm: hasClm(s) ? clmPayload(s) : null,
+        fromMdm: hasMdm(s) ? mdmPayload(s) : null,
+        fromAcc: hasAcc(s) ? accPayload(s) : null,
         result: s.taxComputation || null,
       },
-      RPAM: {
-        fromMad: hasMad(s) ? madPayload(s) : null,
-        fromCam: hasCam(s) ? { capitalAccounts: s.partners?.map((p) => p.capitalAccount) } : null,
-        fromTim: s.taxComputation || null,
+      ALC: {
+        fromMdm: hasMdm(s) ? mdmPayload(s) : null,
+        fromAcc: hasAcc(s) ? { capitalAccounts: s.partners?.map((p) => p.capitalAccount) } : null,
+        fromTax: s.taxComputation || null,
         result: s.allocations || null,
       },
-      FORMS: {
-        fromCem: hasCem(s) ? { engagementId: s.engagementId, taxYear: s.taxYear } : null,
-        fromMad: hasMad(s) ? { entity: s.entity } : null,
-        fromTim: s.taxComputation || null,
-        fromRpam: s.allocations || null,
+      DOC: {
+        fromClm: hasClm(s) ? { engagementId: s.engagementId, taxYear: s.taxYear } : null,
+        fromMdm: hasMdm(s) ? { entity: s.entity } : null,
+        fromTax: s.taxComputation || null,
+        fromAlc: s.allocations || null,
         result: s.printPackage || null,
       },
     },
@@ -165,12 +179,21 @@ function buildDataFlow(s) {
 }
 
 module.exports = {
+  hasClm,
+  hasMdm,
+  hasAcc,
+  hasTax,
+  hasAlc,
+  hasDoc,
   hasCem,
   hasMad,
   hasCam,
   hasTim,
   hasRpam,
   hasForms,
+  clmPayload,
+  mdmPayload,
+  accPayload,
   cemPayload,
   madPayload,
   camPayload,

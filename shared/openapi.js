@@ -1,7 +1,10 @@
 const { SERVICES, CONTRACTS, GATEWAY_PORT } = require('./contracts');
 const { PAYLOADS } = require('./payloads');
 
-function buildOpenApi() {
+function buildOpenApi(options = {}) {
+  const publicBase = String(options.serverUrl || process.env.PUBLIC_BASE_URL || '')
+    .trim()
+    .replace(/\/$/, '');
   const paths = {
     '/api/health': {
       get: {
@@ -23,6 +26,19 @@ function buildOpenApi() {
         },
       },
     },
+    '/api/contracts': {
+      get: {
+        tags: ['Gateway', 'Data flow'],
+        summary: 'List contracts (filter by direction / producer / consumer)',
+        operationId: 'listContracts',
+        parameters: [
+          { name: 'direction', in: 'query', schema: { type: 'string', enum: ['downstream', 'upstream', 'reverse'] } },
+          { name: 'producer', in: 'query', schema: { type: 'string', example: 'MDM' } },
+          { name: 'consumer', in: 'query', schema: { type: 'string', example: 'TAX' } },
+        ],
+        responses: { 200: { description: 'Filtered contract list' } },
+      },
+    },
     '/api/contracts/{id}': {
       get: {
         tags: ['Gateway'],
@@ -34,13 +50,56 @@ function buildOpenApi() {
             in: 'path',
             required: true,
             schema: { type: 'string', example: 'CT-01' },
-            description: 'Contract id CT-01 … CT-17',
+            description: 'Contract id CT-00 … CT-17',
           },
         ],
         responses: {
           200: { description: 'Contract detail' },
           404: { description: 'Unknown contract' },
         },
+      },
+    },
+    '/api/flow': {
+      get: {
+        tags: ['Gateway', 'Data flow'],
+        summary: 'Full downstream + upstream data-flow catalog across all modules',
+        operationId: 'getFlowCatalog',
+        responses: { 200: { description: 'Services, edges, endpoint map' } },
+      },
+    },
+    '/api/flow/edges': {
+      get: {
+        tags: ['Gateway', 'Data flow'],
+        summary: 'All CT edges (optional direction filter)',
+        operationId: 'getFlowEdges',
+        parameters: [
+          { name: 'direction', in: 'query', schema: { type: 'string', enum: ['downstream', 'upstream'] } },
+        ],
+        responses: { 200: { description: 'Edge list' } },
+      },
+    },
+    '/api/flow/downstream/{from}/{to}': {
+      get: {
+        tags: ['Gateway', 'Data flow'],
+        summary: 'Downstream contracts + live payloads from → to',
+        operationId: 'getFlowDownstreamPair',
+        parameters: [
+          { name: 'from', in: 'path', required: true, schema: { type: 'string', example: 'MDM' } },
+          { name: 'to', in: 'path', required: true, schema: { type: 'string', example: 'TAX' } },
+        ],
+        responses: { 200: { description: 'Pair payloads' }, 404: { description: 'No downstream edge' } },
+      },
+    },
+    '/api/flow/upstream/{from}/{to}': {
+      get: {
+        tags: ['Gateway', 'Data flow'],
+        summary: 'Upstream (reverse ask) contracts + live payloads from → to',
+        operationId: 'getFlowUpstreamPair',
+        parameters: [
+          { name: 'from', in: 'path', required: true, schema: { type: 'string', example: 'TAX' } },
+          { name: 'to', in: 'path', required: true, schema: { type: 'string', example: 'MDM' } },
+        ],
+        responses: { 200: { description: 'Pair payloads' }, 404: { description: 'No upstream edge' } },
       },
     },
     '/api/filing': {
@@ -116,16 +175,16 @@ function buildOpenApi() {
     '/api/filing/datasets': {
       get: {
         tags: ['Filing — Form 1065'],
-        summary: 'List 5 demo CEM/MAD/CAM Excel datasets',
+        summary: 'List 5 demo CLM/MDM/ACC Excel datasets (files: clm/mdm/acc.xlsx)',
         operationId: 'listExcelDatasets',
         responses: { 200: { description: 'Dataset index' } },
       },
     },
-    '/api/filing/upload/cem': {
+    '/api/filing/upload/clm': {
       post: {
         tags: ['Filing — Form 1065'],
-        summary: 'Upload CEM engagement Excel (.xlsx)',
-        operationId: 'uploadCemExcel',
+        summary: 'Upload CLM engagement Excel (.xlsx)',
+        operationId: 'uploadClmExcel',
         requestBody: {
           required: true,
           content: {
@@ -138,14 +197,14 @@ function buildOpenApi() {
             },
           },
         },
-        responses: { 200: { description: 'Imported CEM context' }, 400: { description: 'Parse/validation error' } },
+        responses: { 200: { description: 'Imported CLM context' }, 400: { description: 'Parse/validation error' } },
       },
     },
-    '/api/filing/upload/mad': {
+    '/api/filing/upload/mdm': {
       post: {
         tags: ['Filing — Form 1065'],
-        summary: 'Upload MAD master-data Excel (.xlsx)',
-        operationId: 'uploadMadExcel',
+        summary: 'Upload MDM master-data Excel (.xlsx)',
+        operationId: 'uploadMdmExcel',
         requestBody: {
           required: true,
           content: {
@@ -161,11 +220,11 @@ function buildOpenApi() {
         responses: { 200: { description: 'Imported entity + partners' }, 400: { description: 'Parse/validation error' } },
       },
     },
-    '/api/filing/upload/cam': {
+    '/api/filing/upload/acc': {
       post: {
         tags: ['Filing — Form 1065'],
-        summary: 'Upload CAM trial-balance Excel (.xlsx)',
-        operationId: 'uploadCamExcel',
+        summary: 'Upload ACC trial-balance Excel (.xlsx)',
+        operationId: 'uploadAccExcel',
         requestBody: {
           required: true,
           content: {
@@ -178,7 +237,39 @@ function buildOpenApi() {
             },
           },
         },
-        responses: { 200: { description: 'Imported trial balance' }, 400: { description: 'Parse/validation error' } },
+        responses: { 200: { description: 'Imported trial balance; runs TAX→ALC→DOC' }, 400: { description: 'Parse/validation error' } },
+      },
+    },
+    '/api/filing/validate/tax': {
+      get: {
+        tags: ['Filing — Form 1065'],
+        summary: 'TAX business validation',
+        operationId: 'validateTax',
+        responses: { 200: { description: 'Validation passed' }, 422: { description: 'Validation failed' } },
+      },
+    },
+    '/api/filing/validate/alc': {
+      get: {
+        tags: ['Filing — Form 1065'],
+        summary: 'ALC business validation',
+        operationId: 'validateAlc',
+        responses: { 200: { description: 'Validation passed' }, 422: { description: 'Validation failed' } },
+      },
+    },
+    '/api/filing/tax/calculate': {
+      post: {
+        tags: ['Filing — Form 1065'],
+        summary: 'Run TAX computation',
+        operationId: 'calculateTax',
+        responses: { 200: { description: 'Tax computed' }, 422: { description: 'Blocked by validation' } },
+      },
+    },
+    '/api/filing/alc/allocate': {
+      post: {
+        tags: ['Filing — Form 1065'],
+        summary: 'Run ALC partner allocations',
+        operationId: 'allocateAlc',
+        responses: { 200: { description: 'Allocated' }, 422: { description: 'Blocked by validation' } },
       },
     },
   };
@@ -205,11 +296,79 @@ function buildOpenApi() {
       },
     };
 
+    paths[`${base}/flow`] = {
+      get: {
+        tags: [`Service ${id} — ${svc.name}`, 'Data flow'],
+        summary: `${svc.name} downstream + upstream peers and contracts`,
+        operationId: `flow_${id}`,
+        responses: { 200: { description: 'Flow summary' } },
+      },
+    };
+
+    paths[`${base}/contracts/downstream`] = {
+      get: {
+        tags: [`Service ${id} — ${svc.name}`, 'Data flow'],
+        summary: `${svc.name} downstream contracts`,
+        operationId: `contracts_downstream_${id}`,
+        responses: { 200: { description: 'Downstream produced/consumed' } },
+      },
+    };
+
+    paths[`${base}/contracts/upstream`] = {
+      get: {
+        tags: [`Service ${id} — ${svc.name}`, 'Data flow'],
+        summary: `${svc.name} upstream (reverse) contracts`,
+        operationId: `contracts_upstream_${id}`,
+        responses: { 200: { description: 'Upstream produced/consumed' } },
+      },
+    };
+
+    paths[`${base}/downstream/{peerId}`] = {
+      get: {
+        tags: [`Service ${id} — ${svc.name}`, 'Data flow'],
+        summary: `Downstream payloads ${id} → peer`,
+        operationId: `downstream_peer_${id}`,
+        parameters: [{ name: 'peerId', in: 'path', required: true, schema: { type: 'string', example: 'TAX' } }],
+        responses: { 200: { description: 'Payloads' }, 404: { description: 'No edge' } },
+      },
+    };
+
+    paths[`${base}/upstream/{peerId}`] = {
+      get: {
+        tags: [`Service ${id} — ${svc.name}`, 'Data flow'],
+        summary: `Upstream payloads ${id} → peer`,
+        operationId: `upstream_peer_${id}`,
+        parameters: [{ name: 'peerId', in: 'path', required: true, schema: { type: 'string', example: 'MDM' } }],
+        responses: { 200: { description: 'Payloads' }, 404: { description: 'No edge' } },
+      },
+    };
+
+    paths[`${base}/consume/downstream`] = {
+      get: {
+        tags: [`Service ${id} — ${svc.name}`, 'Data flow'],
+        summary: `Batch-pull all downstream inputs for ${svc.name}`,
+        operationId: `consume_downstream_${id}`,
+        responses: { 200: { description: 'Batch consume results' } },
+      },
+    };
+
+    paths[`${base}/consume/upstream`] = {
+      get: {
+        tags: [`Service ${id} — ${svc.name}`, 'Data flow'],
+        summary: `Batch-pull all upstream inputs for ${svc.name}`,
+        operationId: `consume_upstream_${id}`,
+        responses: { 200: { description: 'Batch consume results' } },
+      },
+    };
+
     paths[`${base}/pipeline`] = {
       get: {
         tags: [`Service ${id} — ${svc.name}`],
-        summary: `Probe all contracts consumed by ${svc.name}`,
+        summary: `Probe contracts consumed by ${svc.name} (?direction=downstream|upstream)`,
         operationId: `pipeline_${id}`,
+        parameters: [
+          { name: 'direction', in: 'query', schema: { type: 'string', enum: ['downstream', 'upstream'] } },
+        ],
         responses: { 200: { description: 'Consumed contract reachability' } },
       },
     };
@@ -268,25 +427,33 @@ function buildOpenApi() {
       description: [
         'Partnership tax pipeline demo for the NV AI-driven Contract Testing case study.',
         '',
-        '**Microservices (separate processes):** CEM · MAD · CAM · TIM · RPAM · Forms Print',
+        '**Microservices:** CLM · MDM · ACC · TAX · ALC · DOC',
         '',
-        '**Contracts:** CT-00 … CT-17',
+        '**Contracts:** CT-00 … CT-17 (downstream + upstream/reverse)',
         '',
-        'Gateway proxies under `/api/proxy/{CEM|MAD|CAM|TIM|RPAM|FORMS}/...`.',
-        'Excel uploads are owned by CEM / MAD / CAM microservices (`POST /upload`).',
+        '**Data flow APIs:** `/api/flow`, `/api/proxy/{svc}/downstream/{peer}`, `/api/proxy/{svc}/upstream/{peer}`',
+        '',
+        'Gateway proxies under `/api/proxy/{CLM|MDM|ACC|TAX|ALC|DOC}/...` (legacy CEM/MAD/… aliases work).',
+        'Excel uploads are owned by CLM / MDM / ACC (`POST /upload`).',
       ].join('\n'),
       contact: { name: 'TaxMesh Demo' },
     },
     servers: [
+      // Relative URL so Swagger "Try it out" works behind Cloudflare / reverse proxies
+      { url: '/', description: 'This host (same origin)' },
+      ...(publicBase
+        ? [{ url: publicBase, description: 'Public base URL' }]
+        : []),
       { url: `http://127.0.0.1:${GATEWAY_PORT}`, description: 'Local gateway' },
       { url: 'http://localhost:4100', description: 'Localhost alias' },
     ],
     tags: [
       { name: 'Gateway', description: 'Aggregation & catalog APIs' },
+      { name: 'Data flow', description: 'Downstream (forward) and upstream (reverse ask) APIs between modules' },
       {
         name: 'Filing — Form 1065',
         description:
-          'US partnership filing journey: CEM → MAD → CAM → TIM → RPAM → ERE/Forms Print → MeF (case study)',
+          'US partnership filing journey: CLM → MDM → ACC → TAX → ALC → DOC → MeF',
       },
       { name: 'Contracts CT-01…CT-17', description: 'Producer contract payloads' },
       ...Object.values(SERVICES).map((s) => ({

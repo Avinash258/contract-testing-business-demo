@@ -1,12 +1,21 @@
 const express = require('express');
 const cors = require('cors');
-const { SERVICES, contractsProducedBy, contractsConsumedBy, CONTRACTS, urlFor } = require('./contracts');
+const {
+  SERVICES,
+  contractsProducedBy,
+  contractsConsumedBy,
+  CONTRACTS,
+  urlFor,
+  resolveServiceId,
+  apiDirection,
+} = require('./contracts');
 const { PAYLOADS } = require('./payloads');
 const { attachExcelUpload } = require('./serviceUploads');
 const { attachBusinessValidationApis } = require('./serviceValidation');
+const { attachFlowApis, attachPipeline } = require('./flowApis');
 
 function createService(serviceId) {
-  const id = String(serviceId).toUpperCase();
+  const id = resolveServiceId(serviceId);
   const meta = SERVICES[id];
   if (!meta) throw new Error(`Unknown service id ${serviceId}`);
 
@@ -27,12 +36,21 @@ function createService(serviceId) {
       port: meta.port,
       produced: produced.map((c) => c.id),
       consumed: consumed.map((c) => c.id),
+      downstreamOut: produced.filter((c) => c.direction === 'downstream').map((c) => c.consumer),
+      upstreamOut: produced.filter((c) => c.direction === 'reverse').map((c) => c.consumer),
     });
   });
 
   app.get('/contracts', (_req, res) => {
-    res.json({ service: meta, produced, consumed });
+    res.json({
+      service: meta,
+      produced: produced.map((c) => ({ ...c, flow: apiDirection(c.direction) })),
+      consumed: consumed.map((c) => ({ ...c, flow: apiDirection(c.direction) })),
+    });
   });
+
+  // Direction-scoped + peer flow APIs (must register before catch-all CT produce paths)
+  attachFlowApis(app, id);
 
   for (const ct of produced) {
     app.get(ct.path, (_req, res) => {
@@ -41,13 +59,19 @@ function createService(serviceId) {
         producer: meta.id,
         consumer: ct.consumer,
         direction: ct.direction,
+        flow: apiDirection(ct.direction),
         producedAt: new Date().toISOString(),
       });
     });
   }
 
   app.get('/consume/:contractId', async (req, res) => {
-    const ct = CONTRACTS.find((c) => c.id === req.params.contractId && c.consumer === id);
+    const raw = String(req.params.contractId || '');
+    // Reserve direction keywords for batch consume routes registered in flowApis
+    if (/^(downstream|upstream|reverse)$/i.test(raw)) {
+      return res.status(404).json({ error: `Use /consume/${raw.toLowerCase()} for batch pull` });
+    }
+    const ct = CONTRACTS.find((c) => c.id.toLowerCase() === raw.toLowerCase() && c.consumer === id);
     if (!ct) {
       return res.status(404).json({ error: `Service ${id} does not consume ${req.params.contractId}` });
     }
@@ -60,6 +84,7 @@ function createService(serviceId) {
         consumer: id,
         producer: ct.producer,
         direction: ct.direction,
+        flow: apiDirection(ct.direction),
         sourceUrl: target,
         ok: response.ok,
         payload: body,
@@ -73,33 +98,13 @@ function createService(serviceId) {
     }
   });
 
-  app.get('/pipeline', async (_req, res) => {
-    const results = [];
-    for (const ct of consumed) {
-      try {
-        const target = urlFor(ct.producer, ct.path);
-        const response = await fetch(target);
-        results.push({
-          contractId: ct.id,
-          direction: ct.direction,
-          producer: ct.producer,
-          status: response.ok ? 'ok' : 'error',
-          httpStatus: response.status,
-        });
-      } catch {
-        results.push({ contractId: ct.id, direction: ct.direction, producer: ct.producer, status: 'unreachable' });
-      }
-    }
-    res.json({ service: meta.id, code: meta.code, consumedChecks: results });
-  });
+  attachPipeline(app, id, consumed);
 
-  // Excel import owned by CEM / MAD / CAM microservices
-  if (['CEM', 'MAD', 'CAM'].includes(id)) {
+  if (['CLM', 'MDM', 'ACC'].includes(id)) {
     attachExcelUpload(app, id);
   }
 
-  // Business validation + calculate/allocate for TIM and RPAM
-  if (['TIM', 'RPAM'].includes(id)) {
+  if (['TAX', 'ALC'].includes(id)) {
     attachBusinessValidationApis(app, id);
   }
 

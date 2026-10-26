@@ -54,23 +54,23 @@ function createFilingRouter() {
     }
   });
 
-  router.get('/validate/tim', (_req, res) => {
+  router.get('/validate/tax', (_req, res) => {
     const validation = filing.getTimValidation();
-    res.status(validation.ok ? 200 : 422).json({ service: 'TIM', ...validation, snapshot: filing.snapshot() });
+    res.status(validation.ok ? 200 : 422).json({ service: 'TAX', ...validation, snapshot: filing.snapshot() });
   });
 
-  router.get('/validate/rpam', (_req, res) => {
+  router.get('/validate/alc', (_req, res) => {
     const validation = filing.getRpamValidation();
-    res.status(validation.ok ? 200 : 422).json({ service: 'RPAM', ...validation, snapshot: filing.snapshot() });
+    res.status(validation.ok ? 200 : 422).json({ service: 'ALC', ...validation, snapshot: filing.snapshot() });
   });
 
-  router.post('/tim/calculate', (req, res) => {
+  router.post('/tax/calculate', (req, res) => {
     try {
       filing.runTax({ skipValidationGate: !!(req.body && req.body.force) });
       const snap = filing.snapshot();
-      res.status(snap.validations?.tim?.ok ? 200 : 422).json({
-        ok: !!snap.validations?.tim?.ok,
-        validation: snap.validations?.tim,
+      res.status(snap.validations?.tax?.ok ? 200 : 422).json({
+        ok: !!snap.validations?.tax?.ok,
+        validation: snap.validations?.tax,
         taxComputation: snap.taxComputation,
         snapshot: snap,
       });
@@ -84,13 +84,13 @@ function createFilingRouter() {
     }
   });
 
-  router.post('/rpam/allocate', (req, res) => {
+  router.post('/alc/allocate', (req, res) => {
     try {
       filing.runAllocate({ skipValidationGate: !!(req.body && req.body.force) });
       const snap = filing.snapshot();
-      res.status(snap.validations?.rpam?.ok ? 200 : 422).json({
-        ok: !!snap.validations?.rpam?.ok,
-        validation: snap.validations?.rpam,
+      res.status(snap.validations?.alc?.ok ? 200 : 422).json({
+        ok: !!snap.validations?.alc?.ok,
+        validation: snap.validations?.alc,
         allocations: snap.allocations,
         snapshot: snap,
       });
@@ -163,7 +163,7 @@ function createFilingRouter() {
     });
   });
 
-  /** Proxy Excel upload to the owning microservice (CEM / MAD / CAM). */
+  /** Proxy Excel upload to the owning microservice (CLM / MDM / ACC). */
   async function proxyUpload(serviceId, req, res) {
     try {
       if (!req.file) return res.status(400).json({ error: 'Missing file field "file" (.xlsx)' });
@@ -186,9 +186,13 @@ function createFilingRouter() {
     }
   }
 
-  router.post('/upload/cem', upload.single('file'), (req, res) => proxyUpload('CEM', req, res));
-  router.post('/upload/mad', upload.single('file'), (req, res) => proxyUpload('MAD', req, res));
-  router.post('/upload/cam', upload.single('file'), (req, res) => proxyUpload('CAM', req, res));
+  router.post('/upload/clm', upload.single('file'), (req, res) => proxyUpload('CLM', req, res));
+  router.post('/upload/mdm', upload.single('file'), (req, res) => proxyUpload('MDM', req, res));
+  router.post('/upload/acc', upload.single('file'), (req, res) => proxyUpload('ACC', req, res));
+  // Legacy aliases (CEM/MAD/CAM)
+  router.post('/upload/cem', upload.single('file'), (req, res) => proxyUpload('CLM', req, res));
+  router.post('/upload/mad', upload.single('file'), (req, res) => proxyUpload('MDM', req, res));
+  router.post('/upload/cam', upload.single('file'), (req, res) => proxyUpload('ACC', req, res));
 
   router.use((err, _req, res, next) => {
     if (err instanceof multer.MulterError || /xlsx|Excel|file/i.test(String(err.message || ''))) {
