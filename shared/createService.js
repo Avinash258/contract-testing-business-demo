@@ -13,6 +13,7 @@ const { PAYLOADS } = require('./payloads');
 const { attachExcelUpload } = require('./serviceUploads');
 const { attachBusinessValidationApis } = require('./serviceValidation');
 const { attachFlowApis, attachPipeline } = require('./flowApis');
+const { attachV2Apis } = require('./serviceV2Apis');
 
 function createService(serviceId) {
   const id = resolveServiceId(serviceId);
@@ -106,6 +107,11 @@ function createService(serviceId) {
 
   if (['TAX', 'ALC'].includes(id)) {
     attachBusinessValidationApis(app, id);
+  }
+
+  // Branch v2: richer CLM + MDM (legacy MAD) APIs under /v2/*
+  if (['CLM', 'MDM'].includes(id)) {
+    attachV2Apis(app, id);
   }
 
   return { app, meta };
