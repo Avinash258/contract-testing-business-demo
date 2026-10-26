@@ -49,6 +49,7 @@
       <div class="side-foot">
         <a href="/api-docs" target="_blank" rel="noopener">Swagger</a>
         <a href="/download/architecture-guide" download="TaxMesh_API_Architecture_and_Developer_Guide.docx">Guide (.docx)</a>
+        <a href="/download/testdata.zip" download="taxmesh-testdata.zip">Testdata (.zip)</a>
         <a href="/docs/APPLICATION_MANUAL.md" target="_blank" rel="noopener">Manual</a>
       </div>
     </aside>
@@ -113,7 +114,16 @@
             <a id="dlCem" class="linkish" href="#" download>CEM.xlsx</a>
             <a id="dlMad" class="linkish" href="#" download>MAD.xlsx</a>
             <a id="dlCam" class="linkish" href="#" download>CAM.xlsx</a>
+            <a id="dlSetZip" class="linkish" href="/download/testdata/set-01.zip" download>Set ZIP</a>
+            <a class="linkish" href="/download/testdata.zip" download="taxmesh-testdata.zip">All sets ZIP</a>
           </div>
+          <p class="hint download-urls" id="testdataUrls">
+            Direct URLs: <code id="urlCem">/testdata/set-01/cem.xlsx</code>
+            · <code id="urlMad">/testdata/set-01/mad.xlsx</code>
+            · <code id="urlCam">/testdata/set-01/cam.xlsx</code>
+            · <code id="urlSetZip">/download/testdata/set-01.zip</code>
+            · <code>/download/testdata.zip</code>
+          </p>
           <pre id="uploadOut" class="code">Upload status / flow result appears here.</pre>
         </article>
       </section>
@@ -162,8 +172,21 @@
           <a class="doc-card" href="/docs/API.md" target="_blank" rel="noopener"><strong>API docs</strong><span>Upload &amp; data-flow endpoints</span></a>
           <a class="doc-card" href="/docs/APPLICATION_MANUAL.md" target="_blank" rel="noopener"><strong>Manual</strong><span>How to run the filing flow</span></a>
           <a class="doc-card" href="/docs/TaxMesh_API_Architecture_and_Developer_Guide.md" target="_blank" rel="noopener"><strong>Guide (Markdown)</strong><span>Same content in .md</span></a>
-          <a class="doc-card" href="/testdata/index.json" target="_blank" rel="noopener"><strong>Datasets</strong><span>5 Excel sets index</span></a>
+          <a class="doc-card highlight" href="/download/testdata.zip" download="taxmesh-testdata.zip">
+            <strong>Testdata (all ZIP)</strong>
+            <span>Download set-01…05 Excel workbooks · /download/testdata.zip</span>
+          </a>
+          <a class="doc-card" href="/testdata/index.json" target="_blank" rel="noopener"><strong>Datasets index</strong><span>JSON catalog + per-file URLs</span></a>
         </div>
+        <article class="panel mt-panel">
+          <h2>Testdata download URLs</h2>
+          <p class="hint">Each set includes <code>cem.xlsx</code>, <code>mad.xlsx</code>, and <code>cam.xlsx</code>.</p>
+          <ul class="url-list" id="testdataUrlList">
+            <li><a href="/download/testdata.zip">/download/testdata.zip</a> — all sets</li>
+            <li><a href="/download/testdata/set-01.zip">/download/testdata/set-01.zip</a> … <a href="/download/testdata/set-05.zip">set-05.zip</a></li>
+            <li><a href="/testdata/set-01/cem.xlsx">/testdata/set-01/cem.xlsx</a> (same pattern for mad/cam and set-02…05)</li>
+          </ul>
+        </article>
       </section>
     </main>
   </div>

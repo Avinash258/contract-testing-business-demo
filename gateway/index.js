@@ -1,11 +1,65 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const archiver = require('archiver');
 const swaggerUi = require('swagger-ui-express');
 const { SERVICES, CONTRACTS, GATEWAY_PORT, urlFor, JOURNEY, SERVICE_ORDER } = require('../shared/contracts');
 const { PAYLOADS } = require('../shared/payloads');
 const { buildOpenApi } = require('../shared/openapi');
 const { createFilingRouter } = require('./filingRoutes');
+
+const TESTDATA_ROOT = path.join(__dirname, '../testdata');
+
+function buildTestdataZip(folderName) {
+  return new Promise((resolve, reject) => {
+    const abs = folderName ? path.join(TESTDATA_ROOT, folderName) : TESTDATA_ROOT;
+    if (!fs.existsSync(abs)) {
+      reject(Object.assign(new Error(`Testdata not found: ${folderName || 'root'}`), { status: 404 }));
+      return;
+    }
+    const tmp = path.join(os.tmpdir(), `taxmesh-${Date.now()}-${Math.random().toString(16).slice(2)}.zip`);
+    const output = fs.createWriteStream(tmp);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    output.on('close', () => resolve(tmp));
+    output.on('error', reject);
+    archive.on('error', reject);
+    archive.pipe(output);
+    if (folderName) archive.directory(abs, folderName);
+    else archive.directory(TESTDATA_ROOT, false);
+    archive.finalize();
+  });
+}
+
+async function sendTestdataZip(res, zipName, folderName) {
+  let tmp;
+  try {
+    tmp = await buildTestdataZip(folderName);
+    res.download(tmp, zipName, (err) => {
+      if (tmp) {
+        try {
+          fs.unlinkSync(tmp);
+        } catch {
+          /* ignore */
+        }
+      }
+      if (err && !res.headersSent) {
+        res.status(500).json({ error: String(err.message || err) });
+      }
+    });
+  } catch (err) {
+    if (tmp) {
+      try {
+        fs.unlinkSync(tmp);
+      } catch {
+        /* ignore */
+      }
+    }
+    const status = err.status || 500;
+    if (!res.headersSent) res.status(status).json({ error: String(err.message || err) });
+  }
+}
 
 const app = express();
 const openapi = buildOpenApi();
@@ -55,8 +109,40 @@ app.get('/download/architecture-guide', (_req, res) => {
   });
 });
 
+/** Download all Excel demo sets as a zip */
+app.get('/download/testdata', (_req, res) => {
+  sendTestdataZip(res, 'taxmesh-testdata.zip', null);
+});
+app.get('/download/testdata.zip', (_req, res) => {
+  sendTestdataZip(res, 'taxmesh-testdata.zip', null);
+});
+
+/** Download one set (set-01 … set-05) as a zip — /download/testdata/set-01 or …/set-01.zip */
+app.get('/download/testdata/:setId', (req, res) => {
+  const setId = String(req.params.setId || '')
+    .toLowerCase()
+    .replace(/\.zip$/i, '');
+  if (!/^set-0[1-5]$/.test(setId)) {
+    return res.status(400).json({ error: 'Use set-01 … set-05' });
+  }
+  return sendTestdataZip(res, `taxmesh-${setId}.zip`, setId);
+});
+
 app.use('/postman', express.static(path.join(__dirname, '../postman')));
-app.use('/testdata', express.static(path.join(__dirname, '../testdata')));
+app.use(
+  '/testdata',
+  express.static(TESTDATA_ROOT, {
+    setHeaders(res, filePath) {
+      if (/\.xlsx$/i.test(filePath)) {
+        res.setHeader(
+          'Content-Type',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+        res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filePath)}"`);
+      }
+    },
+  })
+);
 
 app.get('/api/health', async (_req, res) => {
   const services = [];

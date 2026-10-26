@@ -146,7 +146,21 @@ function createFilingRouter() {
     if (!fs.existsSync(indexPath)) {
       return res.status(404).json({ error: 'No datasets. Run npm run generate:excel' });
     }
-    res.json(JSON.parse(fs.readFileSync(indexPath, 'utf8')));
+    const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    res.json({
+      ...index,
+      downloadAll: '/download/testdata.zip',
+      datasets: (index.datasets || []).map((d) => ({
+        ...d,
+        downloadZip: `/download/testdata/${d.id}.zip`,
+        downloadUrls: {
+          cem: d.files?.cem,
+          mad: d.files?.mad,
+          cam: d.files?.cam,
+          zip: `/download/testdata/${d.id}.zip`,
+        },
+      })),
+    });
   });
 
   /** Proxy Excel upload to the owning microservice (CEM / MAD / CAM). */

@@ -490,6 +490,37 @@ function updateDatasetLinks() {
   document.getElementById('dlCem').href = ds.files.cem;
   document.getElementById('dlMad').href = ds.files.mad;
   document.getElementById('dlCam').href = ds.files.cam;
+  const zip = ds.downloadZip || `/download/testdata/${id}.zip`;
+  const zipLink = document.getElementById('dlSetZip');
+  if (zipLink) {
+    zipLink.href = zip;
+    zipLink.download = `taxmesh-${id}.zip`;
+  }
+  const set = (el, text) => {
+    if (el) el.textContent = text;
+  };
+  set(document.getElementById('urlCem'), ds.files.cem);
+  set(document.getElementById('urlMad'), ds.files.mad);
+  set(document.getElementById('urlCam'), ds.files.cam);
+  set(document.getElementById('urlSetZip'), zip);
+
+  const list = document.getElementById('testdataUrlList');
+  if (list && state.datasets?.datasets?.length) {
+    const all = state.datasets.downloadAll || '/download/testdata.zip';
+    list.innerHTML = [
+      `<li><a href="${all}" download="taxmesh-testdata.zip"><code>${all}</code></a> — all sets</li>`,
+      ...(state.datasets.datasets || []).map(
+        (d) =>
+          `<li><strong>${d.id}</strong> — ${d.label}<br/>
+            <a href="${d.files.cem}" download>cem.xlsx</a> ·
+            <a href="${d.files.mad}" download>mad.xlsx</a> ·
+            <a href="${d.files.cam}" download>cam.xlsx</a> ·
+            <a href="${d.downloadZip || `/download/testdata/${d.id}.zip`}" download>ZIP</a>
+            <div class="muted mono small-url">${d.downloadZip || `/download/testdata/${d.id}.zip`}</div>
+          </li>`
+      ),
+    ].join('');
+  }
 }
 
 async function toFile(url, name) {
