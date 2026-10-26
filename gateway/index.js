@@ -97,6 +97,8 @@ function requestPublicBase(req) {
 
 /** Dynamic OpenAPI — servers follow the tunnel / public host (not hardcoded localhost). */
 app.get('/openapi.json', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
   const serverUrl = requestPublicBase(req);
   res.json(buildOpenApi({ serverUrl }));
 });

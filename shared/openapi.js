@@ -441,11 +441,10 @@ function buildOpenApi(options = {}) {
     servers: [
       // Relative URL so Swagger "Try it out" works behind Cloudflare / reverse proxies
       { url: '/', description: 'This host (same origin)' },
-      ...(publicBase
-        ? [{ url: publicBase, description: 'Public base URL' }]
+      ...(publicBase && !/127\.0\.0\.1|localhost/i.test(publicBase)
+        ? [{ url: publicBase, description: 'Public / tunnel URL' }]
         : []),
-      { url: `http://127.0.0.1:${GATEWAY_PORT}`, description: 'Local gateway' },
-      { url: 'http://localhost:4100', description: 'Localhost alias' },
+      { url: `http://127.0.0.1:${GATEWAY_PORT}`, description: 'Local gateway only' },
     ],
     tags: [
       { name: 'Gateway', description: 'Aggregation & catalog APIs' },
