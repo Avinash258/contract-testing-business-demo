@@ -446,17 +446,22 @@ function main() {
     const dir = path.join(ROOT, ds.id);
     fs.mkdirSync(dir, { recursive: true });
 
-    writeWorkbook(path.join(dir, 'cem.xlsx'), { Engagement: [ds.cem] });
-    writeWorkbook(path.join(dir, 'mad.xlsx'), { Entity: [ds.entity], Partners: ds.partners });
-    writeWorkbook(path.join(dir, 'cam.xlsx'), { TrialBalance: ds.trialBalance });
+    writeWorkbook(path.join(dir, 'clm.xlsx'), { Engagement: [ds.cem] });
+    writeWorkbook(path.join(dir, 'mdm.xlsx'), { Entity: [ds.entity], Partners: ds.partners });
+    writeWorkbook(path.join(dir, 'acc.xlsx'), { TrialBalance: ds.trialBalance });
+    // Remove legacy filenames if regenerating over an old tree
+    for (const legacy of ['cem.xlsx', 'mad.xlsx', 'cam.xlsx']) {
+      const p = path.join(dir, legacy);
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+    }
 
     index.push({
       id: ds.id,
       label: ds.label,
       files: {
-        cem: `/testdata/${ds.id}/cem.xlsx`,
-        mad: `/testdata/${ds.id}/mad.xlsx`,
-        cam: `/testdata/${ds.id}/cam.xlsx`,
+        clm: `/testdata/${ds.id}/clm.xlsx`,
+        mdm: `/testdata/${ds.id}/mdm.xlsx`,
+        acc: `/testdata/${ds.id}/acc.xlsx`,
       },
       meta: {
         partners: ds.partners.length,

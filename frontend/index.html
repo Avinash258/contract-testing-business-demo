@@ -22,24 +22,24 @@
       <nav class="nav">
         <button type="button" class="nav-btn active" data-view="flow">Overview</button>
 
-        <p class="nav-label">Modules</p>
-        <button type="button" class="nav-btn module" data-view="module" data-module="CEM">
-          <span class="nav-code">CEM</span> Client Engagement
+        <p class="nav-label">Workspace</p>
+        <button type="button" class="nav-btn module" data-view="module" data-module="CLM">
+          <span class="nav-code">CLM</span> Client Management
         </button>
-        <button type="button" class="nav-btn module" data-view="module" data-module="MAD">
-          <span class="nav-code">MAD</span> Master Data
+        <button type="button" class="nav-btn module" data-view="module" data-module="MDM">
+          <span class="nav-code">MDM</span> Master Data
         </button>
-        <button type="button" class="nav-btn module" data-view="module" data-module="CAM">
-          <span class="nav-code">CAM</span> Accounting
+        <button type="button" class="nav-btn module" data-view="module" data-module="ACC">
+          <span class="nav-code">ACC</span> Accounting
         </button>
-        <button type="button" class="nav-btn module" data-view="module" data-module="TIM">
-          <span class="nav-code">TIM</span> Tax Engine
+        <button type="button" class="nav-btn module" data-view="module" data-module="TAX">
+          <span class="nav-code">TAX</span> Tax Computation
         </button>
-        <button type="button" class="nav-btn module" data-view="module" data-module="RPAM">
-          <span class="nav-code">RPAM</span> Allocations
+        <button type="button" class="nav-btn module" data-view="module" data-module="ALC">
+          <span class="nav-code">ALC</span> Allocations
         </button>
-        <button type="button" class="nav-btn module" data-view="module" data-module="FORMS">
-          <span class="nav-code">FORMS</span> Forms Print
+        <button type="button" class="nav-btn module" data-view="module" data-module="DOC">
+          <span class="nav-code">DOC</span> Forms &amp; Documents
         </button>
 
         <p class="nav-label">Outputs</p>
@@ -49,6 +49,7 @@
       <div class="side-foot">
         <a href="/api-docs" target="_blank" rel="noopener">Swagger</a>
         <a href="/download/architecture-guide" download="TaxMesh_API_Architecture_and_Developer_Guide.docx">Guide (.docx)</a>
+        <a href="/download/testdata.zip" download="taxmesh-testdata.zip">Testdata (.zip)</a>
         <a href="/docs/APPLICATION_MANUAL.md" target="_blank" rel="noopener">Manual</a>
       </div>
     </aside>
@@ -72,9 +73,10 @@
         <article class="panel">
           <h2>How data moves</h2>
           <ol class="flow-rules">
-            <li><strong>Upload CEM + MAD</strong> → engagement &amp; entity data is consumed by <em>CAM</em> and <em>TIM</em>.</li>
-            <li><strong>Upload CAM</strong> → CAM reads CEM + MAD, then pushes books into <em>TIM</em> and <em>RPAM</em>.</li>
-            <li><strong>TIM + RPAM calculate</strong> → results flow into <em>Forms Print</em> (1065 / K-1 package).</li>
+            <li><strong>Upload CLM + MDM</strong> → engagement &amp; entity data is consumed by <em>ACC</em> and <em>TAX</em>.</li>
+            <li><strong>Upload ACC</strong> → ACC reads CLM + MDM, then pushes books into <em>TAX</em> and <em>ALC</em>.</li>
+            <li><strong>TAX + ALC calculate</strong> → results flow into <em>Forms &amp; Documents</em> (1065 / K-1 package).</li>
+            <li><strong>Downstream APIs</strong> push journey-forward contracts; <strong>upstream APIs</strong> carry reverse asks (e.g. TAX → MDM). Catalog: <code>/api/flow</code>.</li>
           </ol>
           <div id="flowNodes" class="flow-nodes"></div>
           <div id="flowEdges" class="flow-edges"></div>
@@ -82,25 +84,25 @@
 
         <article class="panel upload-panel">
           <h2>Excel uploads</h2>
-          <p class="hint">Order: CEM → MAD → CAM. CAM upload runs TIM → RPAM → Forms Print.</p>
+          <p class="hint">Order: CLM → MDM → ACC. ACC upload runs TAX → ALC → Forms &amp; Documents. Files: clm.xlsx, mdm.xlsx, acc.xlsx.</p>
           <div class="upload-grid">
             <div class="upload-card">
-              <strong>1. CEM</strong>
+              <strong>1. CLM</strong>
               <span>Engagement / project / job</span>
               <input type="file" id="fileCem" accept=".xlsx" />
-              <button type="button" class="btn small" data-upload="cem">Upload CEM</button>
+              <button type="button" class="btn small" data-upload="clm">Upload CLM</button>
             </div>
             <div class="upload-card">
-              <strong>2. MAD</strong>
-              <span>Entity + partners (needs CEM)</span>
+              <strong>2. MDM</strong>
+              <span>Entity + partners (needs CLM)</span>
               <input type="file" id="fileMad" accept=".xlsx" />
-              <button type="button" class="btn small" data-upload="mad">Upload MAD</button>
+              <button type="button" class="btn small" data-upload="mdm">Upload MDM</button>
             </div>
             <div class="upload-card">
-              <strong>3. CAM</strong>
-              <span>Trial balance → TIM &amp; RPAM → Forms</span>
+              <strong>3. ACC</strong>
+              <span>Trial balance → TAX &amp; ALC → Forms</span>
               <input type="file" id="fileCam" accept=".xlsx" />
-              <button type="button" class="btn small" data-upload="cam">Upload CAM &amp; process</button>
+              <button type="button" class="btn small" data-upload="acc">Upload ACC &amp; process</button>
             </div>
           </div>
           <div class="dataset-row">
@@ -110,10 +112,19 @@
             <button type="button" class="btn small" id="btnLoadDataset">Load files</button>
             <button type="button" class="btn small" id="btnUploadAll">Upload all 3 &amp; process</button>
             <button type="button" class="btn ghost small" id="btnReset">Reset</button>
-            <a id="dlCem" class="linkish" href="#" download>CEM.xlsx</a>
-            <a id="dlMad" class="linkish" href="#" download>MAD.xlsx</a>
-            <a id="dlCam" class="linkish" href="#" download>CAM.xlsx</a>
+            <a id="dlCem" class="linkish" href="#" download>CLM.xlsx</a>
+            <a id="dlMad" class="linkish" href="#" download>MDM.xlsx</a>
+            <a id="dlCam" class="linkish" href="#" download>ACC.xlsx</a>
+            <a id="dlSetZip" class="linkish" href="/download/testdata/set-01.zip" download>Set ZIP</a>
+            <a class="linkish" href="/download/testdata.zip" download="taxmesh-testdata.zip">All sets ZIP</a>
           </div>
+          <p class="hint download-urls" id="testdataUrls">
+            Direct URLs: <code id="urlCem">/testdata/set-01/clm.xlsx</code>
+            · <code id="urlMad">/testdata/set-01/mdm.xlsx</code>
+            · <code id="urlCam">/testdata/set-01/acc.xlsx</code>
+            · <code id="urlSetZip">/download/testdata/set-01.zip</code>
+            · <code>/download/testdata.zip</code>
+          </p>
           <pre id="uploadOut" class="code">Upload status / flow result appears here.</pre>
         </article>
       </section>
@@ -139,11 +150,11 @@
         <div class="split">
           <article class="panel">
             <h2>Form 1065 — key lines</h2>
-            <div id="form1065Body" class="muted">Process a CAM upload to populate.</div>
+            <div id="form1065Body" class="muted">Process an ACC upload to populate.</div>
           </article>
           <article class="panel">
             <h2>Schedule K-1 preview</h2>
-            <div id="k1Body" class="muted">RPAM allocations appear here after flow.</div>
+            <div id="k1Body" class="muted">ALC allocations appear here after flow.</div>
           </article>
         </div>
         <article class="panel mt-panel">
@@ -162,8 +173,21 @@
           <a class="doc-card" href="/docs/API.md" target="_blank" rel="noopener"><strong>API docs</strong><span>Upload &amp; data-flow endpoints</span></a>
           <a class="doc-card" href="/docs/APPLICATION_MANUAL.md" target="_blank" rel="noopener"><strong>Manual</strong><span>How to run the filing flow</span></a>
           <a class="doc-card" href="/docs/TaxMesh_API_Architecture_and_Developer_Guide.md" target="_blank" rel="noopener"><strong>Guide (Markdown)</strong><span>Same content in .md</span></a>
-          <a class="doc-card" href="/testdata/index.json" target="_blank" rel="noopener"><strong>Datasets</strong><span>5 Excel sets index</span></a>
+          <a class="doc-card highlight" href="/download/testdata.zip" download="taxmesh-testdata.zip">
+            <strong>Testdata (all ZIP)</strong>
+            <span>Download set-01…05 Excel workbooks · /download/testdata.zip</span>
+          </a>
+          <a class="doc-card" href="/testdata/index.json" target="_blank" rel="noopener"><strong>Datasets index</strong><span>JSON catalog + per-file URLs</span></a>
         </div>
+        <article class="panel mt-panel">
+          <h2>Testdata download URLs</h2>
+          <p class="hint">Each set includes <code>clm.xlsx</code>, <code>mdm.xlsx</code>, and <code>acc.xlsx</code>.</p>
+          <ul class="url-list" id="testdataUrlList">
+            <li><a href="/download/testdata.zip">/download/testdata.zip</a> — all sets</li>
+            <li><a href="/download/testdata/set-01.zip">/download/testdata/set-01.zip</a> … <a href="/download/testdata/set-05.zip">set-05.zip</a></li>
+            <li><a href="/testdata/set-01/clm.xlsx">/testdata/set-01/clm.xlsx</a> (same pattern for mdm/acc and set-02…05)</li>
+          </ul>
+        </article>
       </section>
     </main>
   </div>

@@ -3,7 +3,7 @@
   "info": {
     "title": "TaxMesh — Tax Demo Microservice APIs",
     "version": "1.0.0",
-    "description": "Partnership tax pipeline demo for the NV AI-driven Contract Testing case study.\n\n**Microservices (separate processes):** CEM · MAD · CAM · TIM · RPAM · Forms Print\n\n**Contracts:** CT-00 … CT-17\n\nGateway proxies under `/api/proxy/{CEM|MAD|CAM|TIM|RPAM|FORMS}/...`.\nExcel uploads are owned by CEM / MAD / CAM microservices (`POST /upload`).",
+    "description": "Partnership tax pipeline demo for the NV AI-driven Contract Testing case study.\n\n**Microservices:** CLM · MDM · ACC · TAX · ALC · DOC\n\n**Contracts:** CT-00 … CT-17 (downstream + upstream/reverse)\n\n**Data flow APIs:** `/api/flow`, `/api/proxy/{svc}/downstream/{peer}`, `/api/proxy/{svc}/upstream/{peer}`\n\nGateway proxies under `/api/proxy/{CLM|MDM|ACC|TAX|ALC|DOC}/...` (legacy CEM/MAD/… aliases work).\nExcel uploads are owned by CLM / MDM / ACC (`POST /upload`).",
     "contact": {
       "name": "TaxMesh Demo"
     }
@@ -24,36 +24,40 @@
       "description": "Aggregation & catalog APIs"
     },
     {
+      "name": "Data flow",
+      "description": "Downstream (forward) and upstream (reverse ask) APIs between modules"
+    },
+    {
       "name": "Filing — Form 1065",
-      "description": "US partnership filing journey: CEM → MAD → CAM → TIM → RPAM → ERE/Forms Print → MeF (case study)"
+      "description": "US partnership filing journey: CLM → MDM → ACC → TAX → ALC → DOC → MeF"
     },
     {
       "name": "Contracts CT-01…CT-17",
       "description": "Producer contract payloads"
     },
     {
-      "name": "Service CEM — Client Engagement",
-      "description": "CEM · Engagement, project, entity group & job context · port 4101"
+      "name": "Service CLM — Client Management",
+      "description": "CLM · Engagement, project, entity group & job context · port 4101"
     },
     {
-      "name": "Service MAD — Master Data",
-      "description": "MAD · Legal entities, ownership, SALT & contacts · port 4102"
+      "name": "Service MDM — Master Data",
+      "description": "MDM · Legal entities, ownership, SALT & contacts · port 4102"
     },
     {
-      "name": "Service CAM — Accounting",
-      "description": "CAM · Chart of accounts, mappings & adjustments · port 4103"
+      "name": "Service ACC — Accounting",
+      "description": "ACC · Chart of accounts, mappings & adjustments · port 4103"
     },
     {
-      "name": "Service TIM — Tax Engine",
-      "description": "TIM · Forms import, federal / state recalculation · port 4104"
+      "name": "Service TAX — Tax Computation",
+      "description": "TAX · Forms import, federal / state recalculation · port 4104"
     },
     {
-      "name": "Service RPAM — Allocations",
-      "description": "RPAM · Partner capital, allocate & tier · port 4105"
+      "name": "Service ALC — Allocations",
+      "description": "ALC · Partner capital, allocate & tier · port 4105"
     },
     {
-      "name": "Service FORMS — Forms & Print",
-      "description": "Forms Print · Reporting sync & final print package · port 4106"
+      "name": "Service DOC — Forms & Documents",
+      "description": "DOC · Reporting sync & final print package · port 4106"
     }
   ],
   "paths": {
@@ -99,6 +103,51 @@
         }
       }
     },
+    "/api/contracts": {
+      "get": {
+        "tags": [
+          "Gateway",
+          "Data flow"
+        ],
+        "summary": "List contracts (filter by direction / producer / consumer)",
+        "operationId": "listContracts",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "downstream",
+                "upstream",
+                "reverse"
+              ]
+            }
+          },
+          {
+            "name": "producer",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "MDM"
+            }
+          },
+          {
+            "name": "consumer",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "TAX"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filtered contract list"
+          }
+        }
+      }
+    },
     "/api/contracts/{id}": {
       "get": {
         "tags": [
@@ -115,7 +164,7 @@
               "type": "string",
               "example": "CT-01"
             },
-            "description": "Contract id CT-01 … CT-17"
+            "description": "Contract id CT-00 … CT-17"
           }
         ],
         "responses": {
@@ -124,6 +173,125 @@
           },
           "404": {
             "description": "Unknown contract"
+          }
+        }
+      }
+    },
+    "/api/flow": {
+      "get": {
+        "tags": [
+          "Gateway",
+          "Data flow"
+        ],
+        "summary": "Full downstream + upstream data-flow catalog across all modules",
+        "operationId": "getFlowCatalog",
+        "responses": {
+          "200": {
+            "description": "Services, edges, endpoint map"
+          }
+        }
+      }
+    },
+    "/api/flow/edges": {
+      "get": {
+        "tags": [
+          "Gateway",
+          "Data flow"
+        ],
+        "summary": "All CT edges (optional direction filter)",
+        "operationId": "getFlowEdges",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "downstream",
+                "upstream"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Edge list"
+          }
+        }
+      }
+    },
+    "/api/flow/downstream/{from}/{to}": {
+      "get": {
+        "tags": [
+          "Gateway",
+          "Data flow"
+        ],
+        "summary": "Downstream contracts + live payloads from → to",
+        "operationId": "getFlowDownstreamPair",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "MDM"
+            }
+          },
+          {
+            "name": "to",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "TAX"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pair payloads"
+          },
+          "404": {
+            "description": "No downstream edge"
+          }
+        }
+      }
+    },
+    "/api/flow/upstream/{from}/{to}": {
+      "get": {
+        "tags": [
+          "Gateway",
+          "Data flow"
+        ],
+        "summary": "Upstream (reverse ask) contracts + live payloads from → to",
+        "operationId": "getFlowUpstreamPair",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "TAX"
+            }
+          },
+          {
+            "name": "to",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "MDM"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pair payloads"
+          },
+          "404": {
+            "description": "No upstream edge"
           }
         }
       }
@@ -253,7 +421,7 @@
         "tags": [
           "Filing — Form 1065"
         ],
-        "summary": "List 5 demo CEM/MAD/CAM Excel datasets",
+        "summary": "List 5 demo CLM/MDM/ACC Excel datasets (files: clm/mdm/acc.xlsx)",
         "operationId": "listExcelDatasets",
         "responses": {
           "200": {
@@ -262,13 +430,13 @@
         }
       }
     },
-    "/api/filing/upload/cem": {
+    "/api/filing/upload/clm": {
       "post": {
         "tags": [
           "Filing — Form 1065"
         ],
-        "summary": "Upload CEM engagement Excel (.xlsx)",
-        "operationId": "uploadCemExcel",
+        "summary": "Upload CLM engagement Excel (.xlsx)",
+        "operationId": "uploadClmExcel",
         "requestBody": {
           "required": true,
           "content": {
@@ -290,7 +458,7 @@
         },
         "responses": {
           "200": {
-            "description": "Imported CEM context"
+            "description": "Imported CLM context"
           },
           "400": {
             "description": "Parse/validation error"
@@ -298,13 +466,13 @@
         }
       }
     },
-    "/api/filing/upload/mad": {
+    "/api/filing/upload/mdm": {
       "post": {
         "tags": [
           "Filing — Form 1065"
         ],
-        "summary": "Upload MAD master-data Excel (.xlsx)",
-        "operationId": "uploadMadExcel",
+        "summary": "Upload MDM master-data Excel (.xlsx)",
+        "operationId": "uploadMdmExcel",
         "requestBody": {
           "required": true,
           "content": {
@@ -334,13 +502,13 @@
         }
       }
     },
-    "/api/filing/upload/cam": {
+    "/api/filing/upload/acc": {
       "post": {
         "tags": [
           "Filing — Form 1065"
         ],
-        "summary": "Upload CAM trial-balance Excel (.xlsx)",
-        "operationId": "uploadCamExcel",
+        "summary": "Upload ACC trial-balance Excel (.xlsx)",
+        "operationId": "uploadAccExcel",
         "requestBody": {
           "required": true,
           "content": {
@@ -362,7 +530,7 @@
         },
         "responses": {
           "200": {
-            "description": "Imported trial balance"
+            "description": "Imported trial balance; runs TAX→ALC→DOC"
           },
           "400": {
             "description": "Parse/validation error"
@@ -370,13 +538,81 @@
         }
       }
     },
-    "/api/proxy/CEM/health": {
+    "/api/filing/validate/tax": {
       "get": {
         "tags": [
-          "Service CEM — Client Engagement"
+          "Filing — Form 1065"
         ],
-        "summary": "Client Engagement health",
-        "operationId": "health_CEM",
+        "summary": "TAX business validation",
+        "operationId": "validateTax",
+        "responses": {
+          "200": {
+            "description": "Validation passed"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/api/filing/validate/alc": {
+      "get": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "ALC business validation",
+        "operationId": "validateAlc",
+        "responses": {
+          "200": {
+            "description": "Validation passed"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/api/filing/tax/calculate": {
+      "post": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Run TAX computation",
+        "operationId": "calculateTax",
+        "responses": {
+          "200": {
+            "description": "Tax computed"
+          },
+          "422": {
+            "description": "Blocked by validation"
+          }
+        }
+      }
+    },
+    "/api/filing/alc/allocate": {
+      "post": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Run ALC partner allocations",
+        "operationId": "allocateAlc",
+        "responses": {
+          "200": {
+            "description": "Allocated"
+          },
+          "422": {
+            "description": "Blocked by validation"
+          }
+        }
+      }
+    },
+    "/api/proxy/CLM/health": {
+      "get": {
+        "tags": [
+          "Service CLM — Client Management"
+        ],
+        "summary": "Client Management health",
+        "operationId": "health_CLM",
         "responses": {
           "200": {
             "description": "Service health"
@@ -384,13 +620,13 @@
         }
       }
     },
-    "/api/proxy/CEM/contracts": {
+    "/api/proxy/CLM/contracts": {
       "get": {
         "tags": [
-          "Service CEM — Client Engagement"
+          "Service CLM — Client Management"
         ],
-        "summary": "Contracts produced/consumed by Client Engagement",
-        "operationId": "contracts_CEM",
+        "summary": "Contracts produced/consumed by Client Management",
+        "operationId": "contracts_CLM",
         "responses": {
           "200": {
             "description": "Contract lists"
@@ -398,13 +634,159 @@
         }
       }
     },
-    "/api/proxy/CEM/pipeline": {
+    "/api/proxy/CLM/flow": {
       "get": {
         "tags": [
-          "Service CEM — Client Engagement"
+          "Service CLM — Client Management",
+          "Data flow"
         ],
-        "summary": "Probe all contracts consumed by Client Engagement",
-        "operationId": "pipeline_CEM",
+        "summary": "Client Management downstream + upstream peers and contracts",
+        "operationId": "flow_CLM",
+        "responses": {
+          "200": {
+            "description": "Flow summary"
+          }
+        }
+      }
+    },
+    "/api/proxy/CLM/contracts/downstream": {
+      "get": {
+        "tags": [
+          "Service CLM — Client Management",
+          "Data flow"
+        ],
+        "summary": "Client Management downstream contracts",
+        "operationId": "contracts_downstream_CLM",
+        "responses": {
+          "200": {
+            "description": "Downstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/CLM/contracts/upstream": {
+      "get": {
+        "tags": [
+          "Service CLM — Client Management",
+          "Data flow"
+        ],
+        "summary": "Client Management upstream (reverse) contracts",
+        "operationId": "contracts_upstream_CLM",
+        "responses": {
+          "200": {
+            "description": "Upstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/CLM/downstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service CLM — Client Management",
+          "Data flow"
+        ],
+        "summary": "Downstream payloads CLM → peer",
+        "operationId": "downstream_peer_CLM",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "TAX"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/CLM/upstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service CLM — Client Management",
+          "Data flow"
+        ],
+        "summary": "Upstream payloads CLM → peer",
+        "operationId": "upstream_peer_CLM",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "MDM"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/CLM/consume/downstream": {
+      "get": {
+        "tags": [
+          "Service CLM — Client Management",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all downstream inputs for Client Management",
+        "operationId": "consume_downstream_CLM",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/CLM/consume/upstream": {
+      "get": {
+        "tags": [
+          "Service CLM — Client Management",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all upstream inputs for Client Management",
+        "operationId": "consume_upstream_CLM",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/CLM/pipeline": {
+      "get": {
+        "tags": [
+          "Service CLM — Client Management"
+        ],
+        "summary": "Probe contracts consumed by Client Management (?direction=downstream|upstream)",
+        "operationId": "pipeline_CLM",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "downstream",
+                "upstream"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Consumed contract reachability"
@@ -412,13 +794,13 @@
         }
       }
     },
-    "/api/proxy/CEM/consume/{contractId}": {
+    "/api/proxy/CLM/consume/{contractId}": {
       "get": {
         "tags": [
-          "Service CEM — Client Engagement"
+          "Service CLM — Client Management"
         ],
-        "summary": "Pull a producer payload consumed by Client Engagement",
-        "operationId": "consume_CEM",
+        "summary": "Pull a producer payload consumed by Client Management",
+        "operationId": "consume_CLM",
         "parameters": [
           {
             "name": "contractId",
@@ -443,13 +825,13 @@
         }
       }
     },
-    "/api/proxy/MAD/health": {
+    "/api/proxy/MDM/health": {
       "get": {
         "tags": [
-          "Service MAD — Master Data"
+          "Service MDM — Master Data"
         ],
         "summary": "Master Data health",
-        "operationId": "health_MAD",
+        "operationId": "health_MDM",
         "responses": {
           "200": {
             "description": "Service health"
@@ -457,13 +839,13 @@
         }
       }
     },
-    "/api/proxy/MAD/contracts": {
+    "/api/proxy/MDM/contracts": {
       "get": {
         "tags": [
-          "Service MAD — Master Data"
+          "Service MDM — Master Data"
         ],
         "summary": "Contracts produced/consumed by Master Data",
-        "operationId": "contracts_MAD",
+        "operationId": "contracts_MDM",
         "responses": {
           "200": {
             "description": "Contract lists"
@@ -471,13 +853,159 @@
         }
       }
     },
-    "/api/proxy/MAD/pipeline": {
+    "/api/proxy/MDM/flow": {
       "get": {
         "tags": [
-          "Service MAD — Master Data"
+          "Service MDM — Master Data",
+          "Data flow"
         ],
-        "summary": "Probe all contracts consumed by Master Data",
-        "operationId": "pipeline_MAD",
+        "summary": "Master Data downstream + upstream peers and contracts",
+        "operationId": "flow_MDM",
+        "responses": {
+          "200": {
+            "description": "Flow summary"
+          }
+        }
+      }
+    },
+    "/api/proxy/MDM/contracts/downstream": {
+      "get": {
+        "tags": [
+          "Service MDM — Master Data",
+          "Data flow"
+        ],
+        "summary": "Master Data downstream contracts",
+        "operationId": "contracts_downstream_MDM",
+        "responses": {
+          "200": {
+            "description": "Downstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/MDM/contracts/upstream": {
+      "get": {
+        "tags": [
+          "Service MDM — Master Data",
+          "Data flow"
+        ],
+        "summary": "Master Data upstream (reverse) contracts",
+        "operationId": "contracts_upstream_MDM",
+        "responses": {
+          "200": {
+            "description": "Upstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/MDM/downstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service MDM — Master Data",
+          "Data flow"
+        ],
+        "summary": "Downstream payloads MDM → peer",
+        "operationId": "downstream_peer_MDM",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "TAX"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/MDM/upstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service MDM — Master Data",
+          "Data flow"
+        ],
+        "summary": "Upstream payloads MDM → peer",
+        "operationId": "upstream_peer_MDM",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "MDM"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/MDM/consume/downstream": {
+      "get": {
+        "tags": [
+          "Service MDM — Master Data",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all downstream inputs for Master Data",
+        "operationId": "consume_downstream_MDM",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/MDM/consume/upstream": {
+      "get": {
+        "tags": [
+          "Service MDM — Master Data",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all upstream inputs for Master Data",
+        "operationId": "consume_upstream_MDM",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/MDM/pipeline": {
+      "get": {
+        "tags": [
+          "Service MDM — Master Data"
+        ],
+        "summary": "Probe contracts consumed by Master Data (?direction=downstream|upstream)",
+        "operationId": "pipeline_MDM",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "downstream",
+                "upstream"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Consumed contract reachability"
@@ -485,13 +1013,13 @@
         }
       }
     },
-    "/api/proxy/MAD/consume/{contractId}": {
+    "/api/proxy/MDM/consume/{contractId}": {
       "get": {
         "tags": [
-          "Service MAD — Master Data"
+          "Service MDM — Master Data"
         ],
         "summary": "Pull a producer payload consumed by Master Data",
-        "operationId": "consume_MAD",
+        "operationId": "consume_MDM",
         "parameters": [
           {
             "name": "contractId",
@@ -516,13 +1044,13 @@
         }
       }
     },
-    "/api/proxy/CAM/health": {
+    "/api/proxy/ACC/health": {
       "get": {
         "tags": [
-          "Service CAM — Accounting"
+          "Service ACC — Accounting"
         ],
         "summary": "Accounting health",
-        "operationId": "health_CAM",
+        "operationId": "health_ACC",
         "responses": {
           "200": {
             "description": "Service health"
@@ -530,13 +1058,13 @@
         }
       }
     },
-    "/api/proxy/CAM/contracts": {
+    "/api/proxy/ACC/contracts": {
       "get": {
         "tags": [
-          "Service CAM — Accounting"
+          "Service ACC — Accounting"
         ],
         "summary": "Contracts produced/consumed by Accounting",
-        "operationId": "contracts_CAM",
+        "operationId": "contracts_ACC",
         "responses": {
           "200": {
             "description": "Contract lists"
@@ -544,13 +1072,159 @@
         }
       }
     },
-    "/api/proxy/CAM/pipeline": {
+    "/api/proxy/ACC/flow": {
       "get": {
         "tags": [
-          "Service CAM — Accounting"
+          "Service ACC — Accounting",
+          "Data flow"
         ],
-        "summary": "Probe all contracts consumed by Accounting",
-        "operationId": "pipeline_CAM",
+        "summary": "Accounting downstream + upstream peers and contracts",
+        "operationId": "flow_ACC",
+        "responses": {
+          "200": {
+            "description": "Flow summary"
+          }
+        }
+      }
+    },
+    "/api/proxy/ACC/contracts/downstream": {
+      "get": {
+        "tags": [
+          "Service ACC — Accounting",
+          "Data flow"
+        ],
+        "summary": "Accounting downstream contracts",
+        "operationId": "contracts_downstream_ACC",
+        "responses": {
+          "200": {
+            "description": "Downstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/ACC/contracts/upstream": {
+      "get": {
+        "tags": [
+          "Service ACC — Accounting",
+          "Data flow"
+        ],
+        "summary": "Accounting upstream (reverse) contracts",
+        "operationId": "contracts_upstream_ACC",
+        "responses": {
+          "200": {
+            "description": "Upstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/ACC/downstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service ACC — Accounting",
+          "Data flow"
+        ],
+        "summary": "Downstream payloads ACC → peer",
+        "operationId": "downstream_peer_ACC",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "TAX"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/ACC/upstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service ACC — Accounting",
+          "Data flow"
+        ],
+        "summary": "Upstream payloads ACC → peer",
+        "operationId": "upstream_peer_ACC",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "MDM"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/ACC/consume/downstream": {
+      "get": {
+        "tags": [
+          "Service ACC — Accounting",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all downstream inputs for Accounting",
+        "operationId": "consume_downstream_ACC",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/ACC/consume/upstream": {
+      "get": {
+        "tags": [
+          "Service ACC — Accounting",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all upstream inputs for Accounting",
+        "operationId": "consume_upstream_ACC",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/ACC/pipeline": {
+      "get": {
+        "tags": [
+          "Service ACC — Accounting"
+        ],
+        "summary": "Probe contracts consumed by Accounting (?direction=downstream|upstream)",
+        "operationId": "pipeline_ACC",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "downstream",
+                "upstream"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Consumed contract reachability"
@@ -558,13 +1232,13 @@
         }
       }
     },
-    "/api/proxy/CAM/consume/{contractId}": {
+    "/api/proxy/ACC/consume/{contractId}": {
       "get": {
         "tags": [
-          "Service CAM — Accounting"
+          "Service ACC — Accounting"
         ],
         "summary": "Pull a producer payload consumed by Accounting",
-        "operationId": "consume_CAM",
+        "operationId": "consume_ACC",
         "parameters": [
           {
             "name": "contractId",
@@ -589,13 +1263,13 @@
         }
       }
     },
-    "/api/proxy/TIM/health": {
+    "/api/proxy/TAX/health": {
       "get": {
         "tags": [
-          "Service TIM — Tax Engine"
+          "Service TAX — Tax Computation"
         ],
-        "summary": "Tax Engine health",
-        "operationId": "health_TIM",
+        "summary": "Tax Computation health",
+        "operationId": "health_TAX",
         "responses": {
           "200": {
             "description": "Service health"
@@ -603,13 +1277,13 @@
         }
       }
     },
-    "/api/proxy/TIM/contracts": {
+    "/api/proxy/TAX/contracts": {
       "get": {
         "tags": [
-          "Service TIM — Tax Engine"
+          "Service TAX — Tax Computation"
         ],
-        "summary": "Contracts produced/consumed by Tax Engine",
-        "operationId": "contracts_TIM",
+        "summary": "Contracts produced/consumed by Tax Computation",
+        "operationId": "contracts_TAX",
         "responses": {
           "200": {
             "description": "Contract lists"
@@ -617,13 +1291,159 @@
         }
       }
     },
-    "/api/proxy/TIM/pipeline": {
+    "/api/proxy/TAX/flow": {
       "get": {
         "tags": [
-          "Service TIM — Tax Engine"
+          "Service TAX — Tax Computation",
+          "Data flow"
         ],
-        "summary": "Probe all contracts consumed by Tax Engine",
-        "operationId": "pipeline_TIM",
+        "summary": "Tax Computation downstream + upstream peers and contracts",
+        "operationId": "flow_TAX",
+        "responses": {
+          "200": {
+            "description": "Flow summary"
+          }
+        }
+      }
+    },
+    "/api/proxy/TAX/contracts/downstream": {
+      "get": {
+        "tags": [
+          "Service TAX — Tax Computation",
+          "Data flow"
+        ],
+        "summary": "Tax Computation downstream contracts",
+        "operationId": "contracts_downstream_TAX",
+        "responses": {
+          "200": {
+            "description": "Downstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/TAX/contracts/upstream": {
+      "get": {
+        "tags": [
+          "Service TAX — Tax Computation",
+          "Data flow"
+        ],
+        "summary": "Tax Computation upstream (reverse) contracts",
+        "operationId": "contracts_upstream_TAX",
+        "responses": {
+          "200": {
+            "description": "Upstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/TAX/downstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service TAX — Tax Computation",
+          "Data flow"
+        ],
+        "summary": "Downstream payloads TAX → peer",
+        "operationId": "downstream_peer_TAX",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "TAX"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/TAX/upstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service TAX — Tax Computation",
+          "Data flow"
+        ],
+        "summary": "Upstream payloads TAX → peer",
+        "operationId": "upstream_peer_TAX",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "MDM"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/TAX/consume/downstream": {
+      "get": {
+        "tags": [
+          "Service TAX — Tax Computation",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all downstream inputs for Tax Computation",
+        "operationId": "consume_downstream_TAX",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/TAX/consume/upstream": {
+      "get": {
+        "tags": [
+          "Service TAX — Tax Computation",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all upstream inputs for Tax Computation",
+        "operationId": "consume_upstream_TAX",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/TAX/pipeline": {
+      "get": {
+        "tags": [
+          "Service TAX — Tax Computation"
+        ],
+        "summary": "Probe contracts consumed by Tax Computation (?direction=downstream|upstream)",
+        "operationId": "pipeline_TAX",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "downstream",
+                "upstream"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Consumed contract reachability"
@@ -631,13 +1451,13 @@
         }
       }
     },
-    "/api/proxy/TIM/consume/{contractId}": {
+    "/api/proxy/TAX/consume/{contractId}": {
       "get": {
         "tags": [
-          "Service TIM — Tax Engine"
+          "Service TAX — Tax Computation"
         ],
-        "summary": "Pull a producer payload consumed by Tax Engine",
-        "operationId": "consume_TIM",
+        "summary": "Pull a producer payload consumed by Tax Computation",
+        "operationId": "consume_TAX",
         "parameters": [
           {
             "name": "contractId",
@@ -662,13 +1482,13 @@
         }
       }
     },
-    "/api/proxy/RPAM/health": {
+    "/api/proxy/ALC/health": {
       "get": {
         "tags": [
-          "Service RPAM — Allocations"
+          "Service ALC — Allocations"
         ],
         "summary": "Allocations health",
-        "operationId": "health_RPAM",
+        "operationId": "health_ALC",
         "responses": {
           "200": {
             "description": "Service health"
@@ -676,13 +1496,13 @@
         }
       }
     },
-    "/api/proxy/RPAM/contracts": {
+    "/api/proxy/ALC/contracts": {
       "get": {
         "tags": [
-          "Service RPAM — Allocations"
+          "Service ALC — Allocations"
         ],
         "summary": "Contracts produced/consumed by Allocations",
-        "operationId": "contracts_RPAM",
+        "operationId": "contracts_ALC",
         "responses": {
           "200": {
             "description": "Contract lists"
@@ -690,13 +1510,159 @@
         }
       }
     },
-    "/api/proxy/RPAM/pipeline": {
+    "/api/proxy/ALC/flow": {
       "get": {
         "tags": [
-          "Service RPAM — Allocations"
+          "Service ALC — Allocations",
+          "Data flow"
         ],
-        "summary": "Probe all contracts consumed by Allocations",
-        "operationId": "pipeline_RPAM",
+        "summary": "Allocations downstream + upstream peers and contracts",
+        "operationId": "flow_ALC",
+        "responses": {
+          "200": {
+            "description": "Flow summary"
+          }
+        }
+      }
+    },
+    "/api/proxy/ALC/contracts/downstream": {
+      "get": {
+        "tags": [
+          "Service ALC — Allocations",
+          "Data flow"
+        ],
+        "summary": "Allocations downstream contracts",
+        "operationId": "contracts_downstream_ALC",
+        "responses": {
+          "200": {
+            "description": "Downstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/ALC/contracts/upstream": {
+      "get": {
+        "tags": [
+          "Service ALC — Allocations",
+          "Data flow"
+        ],
+        "summary": "Allocations upstream (reverse) contracts",
+        "operationId": "contracts_upstream_ALC",
+        "responses": {
+          "200": {
+            "description": "Upstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/ALC/downstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service ALC — Allocations",
+          "Data flow"
+        ],
+        "summary": "Downstream payloads ALC → peer",
+        "operationId": "downstream_peer_ALC",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "TAX"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/ALC/upstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service ALC — Allocations",
+          "Data flow"
+        ],
+        "summary": "Upstream payloads ALC → peer",
+        "operationId": "upstream_peer_ALC",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "MDM"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/ALC/consume/downstream": {
+      "get": {
+        "tags": [
+          "Service ALC — Allocations",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all downstream inputs for Allocations",
+        "operationId": "consume_downstream_ALC",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/ALC/consume/upstream": {
+      "get": {
+        "tags": [
+          "Service ALC — Allocations",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all upstream inputs for Allocations",
+        "operationId": "consume_upstream_ALC",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/ALC/pipeline": {
+      "get": {
+        "tags": [
+          "Service ALC — Allocations"
+        ],
+        "summary": "Probe contracts consumed by Allocations (?direction=downstream|upstream)",
+        "operationId": "pipeline_ALC",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "downstream",
+                "upstream"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Consumed contract reachability"
@@ -704,13 +1670,13 @@
         }
       }
     },
-    "/api/proxy/RPAM/consume/{contractId}": {
+    "/api/proxy/ALC/consume/{contractId}": {
       "get": {
         "tags": [
-          "Service RPAM — Allocations"
+          "Service ALC — Allocations"
         ],
         "summary": "Pull a producer payload consumed by Allocations",
-        "operationId": "consume_RPAM",
+        "operationId": "consume_ALC",
         "parameters": [
           {
             "name": "contractId",
@@ -735,13 +1701,13 @@
         }
       }
     },
-    "/api/proxy/FORMS/health": {
+    "/api/proxy/DOC/health": {
       "get": {
         "tags": [
-          "Service FORMS — Forms & Print"
+          "Service DOC — Forms & Documents"
         ],
-        "summary": "Forms & Print health",
-        "operationId": "health_FORMS",
+        "summary": "Forms & Documents health",
+        "operationId": "health_DOC",
         "responses": {
           "200": {
             "description": "Service health"
@@ -749,13 +1715,13 @@
         }
       }
     },
-    "/api/proxy/FORMS/contracts": {
+    "/api/proxy/DOC/contracts": {
       "get": {
         "tags": [
-          "Service FORMS — Forms & Print"
+          "Service DOC — Forms & Documents"
         ],
-        "summary": "Contracts produced/consumed by Forms & Print",
-        "operationId": "contracts_FORMS",
+        "summary": "Contracts produced/consumed by Forms & Documents",
+        "operationId": "contracts_DOC",
         "responses": {
           "200": {
             "description": "Contract lists"
@@ -763,13 +1729,159 @@
         }
       }
     },
-    "/api/proxy/FORMS/pipeline": {
+    "/api/proxy/DOC/flow": {
       "get": {
         "tags": [
-          "Service FORMS — Forms & Print"
+          "Service DOC — Forms & Documents",
+          "Data flow"
         ],
-        "summary": "Probe all contracts consumed by Forms & Print",
-        "operationId": "pipeline_FORMS",
+        "summary": "Forms & Documents downstream + upstream peers and contracts",
+        "operationId": "flow_DOC",
+        "responses": {
+          "200": {
+            "description": "Flow summary"
+          }
+        }
+      }
+    },
+    "/api/proxy/DOC/contracts/downstream": {
+      "get": {
+        "tags": [
+          "Service DOC — Forms & Documents",
+          "Data flow"
+        ],
+        "summary": "Forms & Documents downstream contracts",
+        "operationId": "contracts_downstream_DOC",
+        "responses": {
+          "200": {
+            "description": "Downstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/DOC/contracts/upstream": {
+      "get": {
+        "tags": [
+          "Service DOC — Forms & Documents",
+          "Data flow"
+        ],
+        "summary": "Forms & Documents upstream (reverse) contracts",
+        "operationId": "contracts_upstream_DOC",
+        "responses": {
+          "200": {
+            "description": "Upstream produced/consumed"
+          }
+        }
+      }
+    },
+    "/api/proxy/DOC/downstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service DOC — Forms & Documents",
+          "Data flow"
+        ],
+        "summary": "Downstream payloads DOC → peer",
+        "operationId": "downstream_peer_DOC",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "TAX"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/DOC/upstream/{peerId}": {
+      "get": {
+        "tags": [
+          "Service DOC — Forms & Documents",
+          "Data flow"
+        ],
+        "summary": "Upstream payloads DOC → peer",
+        "operationId": "upstream_peer_DOC",
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "MDM"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payloads"
+          },
+          "404": {
+            "description": "No edge"
+          }
+        }
+      }
+    },
+    "/api/proxy/DOC/consume/downstream": {
+      "get": {
+        "tags": [
+          "Service DOC — Forms & Documents",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all downstream inputs for Forms & Documents",
+        "operationId": "consume_downstream_DOC",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/DOC/consume/upstream": {
+      "get": {
+        "tags": [
+          "Service DOC — Forms & Documents",
+          "Data flow"
+        ],
+        "summary": "Batch-pull all upstream inputs for Forms & Documents",
+        "operationId": "consume_upstream_DOC",
+        "responses": {
+          "200": {
+            "description": "Batch consume results"
+          }
+        }
+      }
+    },
+    "/api/proxy/DOC/pipeline": {
+      "get": {
+        "tags": [
+          "Service DOC — Forms & Documents"
+        ],
+        "summary": "Probe contracts consumed by Forms & Documents (?direction=downstream|upstream)",
+        "operationId": "pipeline_DOC",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "downstream",
+                "upstream"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Consumed contract reachability"
@@ -777,13 +1889,13 @@
         }
       }
     },
-    "/api/proxy/FORMS/consume/{contractId}": {
+    "/api/proxy/DOC/consume/{contractId}": {
       "get": {
         "tags": [
-          "Service FORMS — Forms & Print"
+          "Service DOC — Forms & Documents"
         ],
-        "summary": "Pull a producer payload consumed by Forms & Print",
-        "operationId": "consume_FORMS",
+        "summary": "Pull a producer payload consumed by Forms & Documents",
+        "operationId": "consume_DOC",
         "parameters": [
           {
             "name": "contractId",
@@ -808,14 +1920,14 @@
         }
       }
     },
-    "/api/proxy/CEM/contracts/ct-00/engagement-context": {
+    "/api/proxy/CLM/contracts/ct-00/engagement-context": {
       "get": {
         "tags": [
-          "Service CEM — Client Engagement",
+          "Service CLM — Client Management",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-00: Engagement / project / job context",
-        "description": "**downstream** contract · Producer **CEM** → Consumer **MAD**",
+        "description": "**downstream** contract · Producer **CLM** → Consumer **MDM**",
         "operationId": "CT_00",
         "responses": {
           "200": {
@@ -842,14 +1954,14 @@
         }
       }
     },
-    "/api/proxy/MAD/contracts/ct-01/entities": {
+    "/api/proxy/MDM/contracts/ct-01/entities": {
       "get": {
         "tags": [
-          "Service MAD — Master Data",
+          "Service MDM — Master Data",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-01: Entities for account mapping",
-        "description": "**downstream** contract · Producer **MAD** → Consumer **CAM**",
+        "description": "**downstream** contract · Producer **MDM** → Consumer **ACC**",
         "operationId": "CT_01",
         "responses": {
           "200": {
@@ -885,14 +1997,14 @@
         }
       }
     },
-    "/api/proxy/MAD/contracts/ct-02/tax-attributes": {
+    "/api/proxy/MDM/contracts/ct-02/tax-attributes": {
       "get": {
         "tags": [
-          "Service MAD — Master Data",
+          "Service MDM — Master Data",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-02: Entity tax attributes",
-        "description": "**downstream** contract · Producer **MAD** → Consumer **TIM**",
+        "description": "**downstream** contract · Producer **MDM** → Consumer **TAX**",
         "operationId": "CT_02",
         "responses": {
           "200": {
@@ -923,14 +2035,14 @@
         }
       }
     },
-    "/api/proxy/MAD/contracts/ct-03/ownership": {
+    "/api/proxy/MDM/contracts/ct-03/ownership": {
       "get": {
         "tags": [
-          "Service MAD — Master Data",
+          "Service MDM — Master Data",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-03: Partner ownership",
-        "description": "**downstream** contract · Producer **MAD** → Consumer **RPAM**",
+        "description": "**downstream** contract · Producer **MDM** → Consumer **ALC**",
         "operationId": "CT_03",
         "responses": {
           "200": {
@@ -965,14 +2077,14 @@
         }
       }
     },
-    "/api/proxy/MAD/contracts/ct-04/filing-meta": {
+    "/api/proxy/MDM/contracts/ct-04/filing-meta": {
       "get": {
         "tags": [
-          "Service MAD — Master Data",
+          "Service MDM — Master Data",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-04: Filing metadata",
-        "description": "**downstream** contract · Producer **MAD** → Consumer **FORMS**",
+        "description": "**downstream** contract · Producer **MDM** → Consumer **DOC**",
         "operationId": "CT_04",
         "responses": {
           "200": {
@@ -1003,14 +2115,14 @@
         }
       }
     },
-    "/api/proxy/CAM/contracts/ct-05/mapping-gaps": {
+    "/api/proxy/ACC/contracts/ct-05/mapping-gaps": {
       "get": {
         "tags": [
-          "Service CAM — Accounting",
+          "Service ACC — Accounting",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-05: Missing entity / account codes",
-        "description": "**reverse** contract · Producer **CAM** → Consumer **MAD**",
+        "description": "**reverse** contract · Producer **ACC** → Consumer **MDM**",
         "operationId": "CT_05",
         "responses": {
           "200": {
@@ -1037,14 +2149,14 @@
         }
       }
     },
-    "/api/proxy/CAM/contracts/ct-06/book-balances": {
+    "/api/proxy/ACC/contracts/ct-06/book-balances": {
       "get": {
         "tags": [
-          "Service CAM — Accounting",
+          "Service ACC — Accounting",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-06: Book account balances",
-        "description": "**downstream** contract · Producer **CAM** → Consumer **TIM**",
+        "description": "**downstream** contract · Producer **ACC** → Consumer **TAX**",
         "operationId": "CT_06",
         "responses": {
           "200": {
@@ -1085,14 +2197,14 @@
         }
       }
     },
-    "/api/proxy/CAM/contracts/ct-07/capital-map": {
+    "/api/proxy/ACC/contracts/ct-07/capital-map": {
       "get": {
         "tags": [
-          "Service CAM — Accounting",
+          "Service ACC — Accounting",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-07: Capital account mappings",
-        "description": "**downstream** contract · Producer **CAM** → Consumer **RPAM**",
+        "description": "**downstream** contract · Producer **ACC** → Consumer **ALC**",
         "operationId": "CT_07",
         "responses": {
           "200": {
@@ -1129,14 +2241,14 @@
         }
       }
     },
-    "/api/proxy/TIM/contracts/ct-08/attribute-gaps": {
+    "/api/proxy/TAX/contracts/ct-08/attribute-gaps": {
       "get": {
         "tags": [
-          "Service TIM — Tax Engine",
+          "Service TAX — Tax Computation",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-08: Tax attribute corrections",
-        "description": "**reverse** contract · Producer **TIM** → Consumer **MAD**",
+        "description": "**reverse** contract · Producer **TAX** → Consumer **MDM**",
         "operationId": "CT_08",
         "responses": {
           "200": {
@@ -1164,14 +2276,14 @@
         }
       }
     },
-    "/api/proxy/TIM/contracts/ct-09/btt-asks": {
+    "/api/proxy/TAX/contracts/ct-09/btt-asks": {
       "get": {
         "tags": [
-          "Service TIM — Tax Engine",
+          "Service TAX — Tax Computation",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-09: Book-to-tax reconciling asks",
-        "description": "**reverse** contract · Producer **TIM** → Consumer **CAM**",
+        "description": "**reverse** contract · Producer **TAX** → Consumer **ACC**",
         "operationId": "CT_09",
         "responses": {
           "200": {
@@ -1199,14 +2311,14 @@
         }
       }
     },
-    "/api/proxy/TIM/contracts/ct-10/taxable-income": {
+    "/api/proxy/TAX/contracts/ct-10/taxable-income": {
       "get": {
         "tags": [
-          "Service TIM — Tax Engine",
+          "Service TAX — Tax Computation",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-10: Taxable income buckets",
-        "description": "**downstream** contract · Producer **TIM** → Consumer **RPAM**",
+        "description": "**downstream** contract · Producer **TAX** → Consumer **ALC**",
         "operationId": "CT_10",
         "responses": {
           "200": {
@@ -1234,14 +2346,14 @@
         }
       }
     },
-    "/api/proxy/TIM/contracts/ct-11/tax-summary": {
+    "/api/proxy/TAX/contracts/ct-11/tax-summary": {
       "get": {
         "tags": [
-          "Service TIM — Tax Engine",
+          "Service TAX — Tax Computation",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-11: Tax computation summary",
-        "description": "**downstream** contract · Producer **TIM** → Consumer **FORMS**",
+        "description": "**downstream** contract · Producer **TAX** → Consumer **DOC**",
         "operationId": "CT_11",
         "responses": {
           "200": {
@@ -1271,14 +2383,14 @@
         }
       }
     },
-    "/api/proxy/RPAM/contracts/ct-12/ownership-issues": {
+    "/api/proxy/ALC/contracts/ct-12/ownership-issues": {
       "get": {
         "tags": [
-          "Service RPAM — Allocations",
+          "Service ALC — Allocations",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-12: Ownership validation issues",
-        "description": "**reverse** contract · Producer **RPAM** → Consumer **MAD**",
+        "description": "**reverse** contract · Producer **ALC** → Consumer **MDM**",
         "operationId": "CT_12",
         "responses": {
           "200": {
@@ -1306,14 +2418,14 @@
         }
       }
     },
-    "/api/proxy/RPAM/contracts/ct-13/allocation-needs": {
+    "/api/proxy/ALC/contracts/ct-13/allocation-needs": {
       "get": {
         "tags": [
-          "Service RPAM — Allocations",
+          "Service ALC — Allocations",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-13: Adjusted tax amount needs",
-        "description": "**reverse** contract · Producer **RPAM** → Consumer **TIM**",
+        "description": "**reverse** contract · Producer **ALC** → Consumer **TAX**",
         "operationId": "CT_13",
         "responses": {
           "200": {
@@ -1341,14 +2453,14 @@
         }
       }
     },
-    "/api/proxy/RPAM/contracts/ct-14/partner-allocations": {
+    "/api/proxy/ALC/contracts/ct-14/partner-allocations": {
       "get": {
         "tags": [
-          "Service RPAM — Allocations",
+          "Service ALC — Allocations",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-14: Partner allocation / K-1 data",
-        "description": "**downstream** contract · Producer **RPAM** → Consumer **FORMS**",
+        "description": "**downstream** contract · Producer **ALC** → Consumer **DOC**",
         "operationId": "CT_14",
         "responses": {
           "200": {
@@ -1387,14 +2499,14 @@
         }
       }
     },
-    "/api/proxy/FORMS/contracts/ct-15/entity-print-needs": {
+    "/api/proxy/DOC/contracts/ct-15/entity-print-needs": {
       "get": {
         "tags": [
-          "Service FORMS — Forms & Print",
+          "Service DOC — Forms & Documents",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-15: Legal name / EIN for forms",
-        "description": "**reverse** contract · Producer **FORMS** → Consumer **MAD**",
+        "description": "**reverse** contract · Producer **DOC** → Consumer **MDM**",
         "operationId": "CT_15",
         "responses": {
           "200": {
@@ -1425,14 +2537,14 @@
         }
       }
     },
-    "/api/proxy/FORMS/contracts/ct-16/tax-line-needs": {
+    "/api/proxy/DOC/contracts/ct-16/tax-line-needs": {
       "get": {
         "tags": [
-          "Service FORMS — Forms & Print",
+          "Service DOC — Forms & Documents",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-16: Tax line amounts for forms",
-        "description": "**reverse** contract · Producer **FORMS** → Consumer **TIM**",
+        "description": "**reverse** contract · Producer **DOC** → Consumer **TAX**",
         "operationId": "CT_16",
         "responses": {
           "200": {
@@ -1460,14 +2572,14 @@
         }
       }
     },
-    "/api/proxy/FORMS/contracts/ct-17/capital-restatement": {
+    "/api/proxy/DOC/contracts/ct-17/capital-restatement": {
       "get": {
         "tags": [
-          "Service FORMS — Forms & Print",
+          "Service DOC — Forms & Documents",
           "Contracts CT-01…CT-17"
         ],
         "summary": "CT-17: Partner capital restatement",
-        "description": "**reverse** contract · Producer **FORMS** → Consumer **RPAM**",
+        "description": "**reverse** contract · Producer **DOC** → Consumer **ALC**",
         "operationId": "CT_17",
         "responses": {
           "200": {

@@ -6,10 +6,49 @@
 
 Aligned to the taxation case study journey:
 
-**CEM → MAD → CAM → TIM → RPAM → Forms Print / MeF**
+**CLM → MDM → ACC → TAX → ALC → DOC / MeF**
 
-Proxy: `/api/proxy/{CEM|MAD|CAM|TIM|RPAM|FORMS}/…` or letter aliases `/api/proxy/{A|B|C|D|E}/…`  
-(A=MAD, B=CAM, C=TIM, D=RPAM, E=FORMS)
+Proxy: `/api/proxy/{CLM|MDM|ACC|TAX|ALC|DOC}/…` (legacy CEM/MAD/CAM/TIM/RPAM/FORMS aliases work)  
+Letter aliases: A=MDM, B=ACC, C=TAX, D=ALC, E=DOC
+
+---
+
+## Data-flow APIs (downstream + upstream)
+
+**Downstream** = journey-forward contracts (earlier module → later).  
+**Upstream** = reverse / feedback asks (later module → earlier). Catalog direction field `reverse` ≡ API `upstream`.
+
+### Gateway
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/flow` | Full catalog: per-service down/up peers + all edges |
+| GET | `/api/flow/edges?direction=` | Edge list (`downstream` \| `upstream`) |
+| GET | `/api/flow/downstream/{from}/{to}` | e.g. `/api/flow/downstream/MDM/TAX` → CT-02 live + sample |
+| GET | `/api/flow/upstream/{from}/{to}` | e.g. `/api/flow/upstream/TAX/MDM` → CT-08 live + sample |
+| GET | `/api/contracts?direction=&producer=&consumer=` | Filter CT-00…CT-17 |
+
+### Per microservice (via `/api/proxy/{svc}/…`)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/flow` | Downstream + upstream peers and contracts for this service |
+| GET | `/contracts/downstream` | Produced + consumed downstream |
+| GET | `/contracts/upstream` | Produced + consumed upstream |
+| GET | `/downstream/{peer}` | Payloads this service sends downstream to peer |
+| GET | `/upstream/{peer}` | Payloads this service sends upstream to peer |
+| GET | `/consume/downstream` | Batch-pull all downstream inputs |
+| GET | `/consume/upstream` | Batch-pull all upstream inputs |
+| GET | `/pipeline?direction=` | Reachability probe (optional direction filter) |
+
+Examples:
+
+```http
+GET /api/proxy/MDM/downstream/TAX
+GET /api/proxy/TAX/upstream/MDM
+GET /api/proxy/TAX/consume/downstream
+GET /api/flow/downstream/ACC/ALC
+```
 
 ---
 
@@ -41,9 +80,9 @@ Proxy: `/api/proxy/{CEM|MAD|CAM|TIM|RPAM|FORMS}/…` or letter aliases `/api/pro
 
 | Module | File | Sheets / columns |
 |--------|------|------------------|
-| CEM | `cem.xlsx` | `Engagement`: clientId, engagementId, projectId, entityGroupId, jobId, **entityName**, taxYear, dueDate, formType, jurisdiction, states |
-| MAD | `mad.xlsx` | `Entity` + `Partners` (ownership must total 100%) |
-| CAM | `cam.xlsx` | `TrialBalance`: accountCode, accountName, bookAmount, schedule |
+| CLM | `clm.xlsx` | `Engagement`: clientId, engagementId, projectId, entityGroupId, jobId, **entityName**, taxYear, dueDate, formType, jurisdiction, states |
+| MDM | `mdm.xlsx` | `Entity` + `Partners` (ownership must total 100%) |
+| ACC | `acc.xlsx` | `TrialBalance`: accountCode, accountName, bookAmount, schedule |
 
 Five demo sets: `testdata/set-01` … `set-05` (`npm run generate:excel`).  
 set-01 = compact baseline; set-02…05 = dynamic partners + full trial balance.

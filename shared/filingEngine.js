@@ -6,14 +6,14 @@ const { validateTim, validateRpam } = require('./businessValidation');
 
 /**
  * US partnership Form 1065 filing engine — upload-driven data flow.
- * CEM/MAD → CAM & TIM; CAM(+CEM+MAD) → TIM & RPAM; TIM+RPAM → Forms Print.
+ * CLM/MDM → ACC & TAX; ACC(+CLM+MDM) → TAX & ALC; TAX+ALC → DOC.
  */
 
 function snapshot() {
   const s = store.read();
   return {
     ...s,
-    journey: ['CEM', 'MAD', 'CAM', 'TIM', 'RPAM', 'Forms Print'],
+    journey: ['CLM', 'MDM', 'ACC', 'TAX', 'ALC', 'DOC'],
     steps: store.STEPS.map((step) => ({
       ...step,
       active: s.currentStep === step.id,
@@ -100,17 +100,17 @@ function computeTotals(s) {
 function validateSetup(s) {
   const issues = [];
   if (!s.entity?.ein || !/^\d{2}-\d{7}$/.test(s.entity.ein)) {
-    issues.push(issue('CT-15', 'MAD', 'high', 'EIN format invalid for Form 1065 identification'));
+    issues.push(issue('CT-15', 'MDM', 'high', 'EIN format invalid for Form 1065 identification'));
   }
   if (!s.entity?.legalName) {
-    issues.push(issue('CT-15', 'MAD', 'high', 'Legal name required for forms package'));
+    issues.push(issue('CT-15', 'MDM', 'high', 'Legal name required for forms package'));
   }
   const pct = (s.partners || []).reduce((sum, p) => sum + Number(p.ownershipPct || 0), 0);
   if (Math.abs(pct - 100) > 0.01) {
-    issues.push(issue('CT-12', 'RPAM', 'high', `Ownership percentages sum to ${pct}%, must equal 100%`));
+    issues.push(issue('CT-12', 'ALC', 'high', `Ownership percentages sum to ${pct}%, must equal 100%`));
   }
   if (s.entity?.section754Election == null) {
-    issues.push(issue('CT-08', 'TIM', 'warning', 'Confirm section 754 election status for tax year'));
+    issues.push(issue('CT-08', 'TAX', 'warning', 'Confirm section 754 election status for tax year'));
   }
   return issues;
 }
@@ -130,7 +130,7 @@ function issue(contractId, sourceService, severity, message, extra = {}) {
 
 function runCem() {
   const s = store.read();
-  const job = startJob(s, 'create-engagement', 'CEM');
+  const job = startJob(s, 'create-engagement', 'CLM');
   s.correlationId = `corr-${s.engagementId}-${Date.now().toString().slice(-5)}`;
   s.clientId = s.clientId || 'CLI-NV-TAX-01';
   s.projectId = s.projectId || 'PRJ-ALPHA-1065-2025';
@@ -158,7 +158,7 @@ function runSetup() {
   const s = store.read();
   if (!s.correlationId) runCem();
   const fresh = store.read();
-  const job = startJob(fresh, 'mad-import', 'MAD');
+  const job = startJob(fresh, 'mad-import', 'MDM');
   const issues = validateSetup(fresh);
   fresh.issues = mergeIssues(fresh.issues, issues);
   fresh.masterDataSnapshot = {
@@ -183,7 +183,7 @@ function runSetup() {
 
 function runBooks() {
   const s = store.read();
-  const job = startJob(s, 'cam-import-sync', 'CAM');
+  const job = startJob(s, 'cam-import-sync', 'ACC');
   s.imports = s.imports || {};
   s.imports.cam = s.imports.cam || {
     fileName: '(api)',
@@ -200,7 +200,7 @@ function runBooks() {
   }));
 
   const gaps = [
-    issue('CT-05', 'CAM', 'info', 'Accumulated depreciation linked to entity ENT-ALPHA-LP for Schedule L'),
+    issue('CT-05', 'ACC', 'info', 'Accumulated depreciation linked to entity ENT-ALPHA-LP for Schedule L'),
   ];
 
   s.booksSnapshot = {
@@ -268,28 +268,28 @@ function runTax(options = {}) {
   const s = store.read();
   const pre = validateTim(s);
   s.validations = s.validations || {};
-  s.validations.tim = pre;
+  s.validations.tax = pre;
 
   if (!pre.canProceed && !skipValidationGate) {
     s.taxComputation = null;
     s.bookToTax = [];
-    const job = startJob(s, 'tim-recalculation', 'TIM');
+    const job = startJob(s, 'tim-recalculation', 'TAX');
     completeJob(s, job, 'failed');
     s.issues = mergeIssues(
       s.issues,
       pre.findings
         .filter((f) => f.severity === 'error')
-        .map((f) => issue(f.code, 'TIM', 'high', f.message, { field: f.field }))
+        .map((f) => issue(f.code, 'TAX', 'high', f.message, { field: f.field }))
     );
     store.setStatus(s, 'books_imported', 'tax');
-    store.log(s, 'tim.validation_blocked', { errors: pre.summary.errors });
+    store.log(s, 'tax.validation_blocked', { errors: pre.summary.errors });
     store.write(s);
-    const err = new Error(`TIM business validation failed (${pre.summary.errors} error(s))`);
+    const err = new Error(`TAX business validation failed (${pre.summary.errors} error(s))`);
     err.validation = pre;
     throw err;
   }
 
-  const job = startJob(s, 'tim-recalculation', 'TIM');
+  const job = startJob(s, 'tim-recalculation', 'TAX');
   const ordinaryBook = amountFor(s, '4000');
   const gp = Math.max(0, amountFor(s, '5000'));
   const bookDep = Math.abs(amountFor(s, '6100'));
@@ -347,7 +347,7 @@ function runTax(options = {}) {
 
   // Re-validate after computation (identity + apportionment)
   const post = validateTim(s);
-  s.validations.tim = post;
+  s.validations.tax = post;
   s.taxComputation.businessValidation = {
     ok: post.ok,
     summary: post.summary,
@@ -355,10 +355,10 @@ function runTax(options = {}) {
   };
 
   const reverse = [
-    issue('CT-09', 'TIM', 'info', 'Book-to-tax depreciation schedule applied (MACRS vs book)'),
+    issue('CT-09', 'TAX', 'info', 'Book-to-tax depreciation schedule applied (MACRS vs book)'),
     issue(
       'CT-08',
-      'TIM',
+      'TAX',
       'info',
       s.entity?.section754Election
         ? 'Section 754 election confirmed for tax year'
@@ -370,7 +370,7 @@ function runTax(options = {}) {
     reverse.concat(
       post.findings
         .filter((f) => f.severity === 'error' || f.severity === 'warning')
-        .map((f) => issue(f.code, 'TIM', f.severity === 'error' ? 'high' : 'warning', f.message, { field: f.field }))
+        .map((f) => issue(f.code, 'TAX', f.severity === 'error' ? 'high' : 'warning', f.message, { field: f.field }))
     )
   );
 
@@ -387,7 +387,7 @@ function runTax(options = {}) {
   store.write(s);
 
   if (!timOk && !skipValidationGate) {
-    const err = new Error(`TIM calculation failed business validation (${post.summary.errors} error(s))`);
+    const err = new Error(`TAX calculation failed business validation (${post.summary.errors} error(s))`);
     err.validation = post;
     throw err;
   }
@@ -404,31 +404,31 @@ function pickGpPartner(partners) {
 function runAllocate(options = {}) {
   const { skipValidationGate = false } = options;
   const s = store.read();
-  if (!s.taxComputation) throw new Error('Run TIM calculation before RPAM allocations');
+  if (!s.taxComputation) throw new Error('Run TAX calculation before ALC allocations');
 
   const pre = validateRpam(s);
   s.validations = s.validations || {};
-  s.validations.rpam = pre;
+  s.validations.alc = pre;
 
   if (!pre.canProceed && !skipValidationGate) {
     s.allocations = null;
-    const job = startJob(s, 'rpam-allocate-tier', 'RPAM');
+    const job = startJob(s, 'rpam-allocate-tier', 'ALC');
     completeJob(s, job, 'failed');
     s.issues = mergeIssues(
       s.issues,
       pre.findings
         .filter((f) => f.severity === 'error')
-        .map((f) => issue(f.code, 'RPAM', 'high', f.message, { field: f.field }))
+        .map((f) => issue(f.code, 'ALC', 'high', f.message, { field: f.field }))
     );
     store.setStatus(s, 'tax_computed', 'allocate');
-    store.log(s, 'rpam.validation_blocked', { errors: pre.summary.errors });
+    store.log(s, 'alc.validation_blocked', { errors: pre.summary.errors });
     store.write(s);
-    const err = new Error(`RPAM business validation failed (${pre.summary.errors} error(s))`);
+    const err = new Error(`ALC business validation failed (${pre.summary.errors} error(s))`);
     err.validation = pre;
     throw err;
   }
 
-  const job = startJob(s, 'rpam-allocate-tier', 'RPAM');
+  const job = startJob(s, 'rpam-allocate-tier', 'ALC');
 
   const ordinary = s.taxComputation.ordinaryBusinessIncome;
   const interest = s.taxComputation.interestIncome || 0;
@@ -502,7 +502,7 @@ function runAllocate(options = {}) {
   };
 
   const post = validateRpam(s);
-  s.validations.rpam = post;
+  s.validations.alc = post;
   s.allocations.businessValidation = {
     ok: post.ok,
     summary: post.summary,
@@ -512,11 +512,11 @@ function runAllocate(options = {}) {
   s.issues = mergeIssues(
     s.issues,
     [
-      issue('CT-13', 'RPAM', 'info', 'Ordinary income allocated per ownership; SA empty for this engagement'),
+      issue('CT-13', 'ALC', 'info', 'Ordinary income allocated per ownership; SA empty for this engagement'),
     ].concat(
       post.findings
         .filter((f) => f.severity === 'error' || f.severity === 'warning')
-        .map((f) => issue(f.code, 'RPAM', f.severity === 'error' ? 'high' : 'warning', f.message, { field: f.field }))
+        .map((f) => issue(f.code, 'ALC', f.severity === 'error' ? 'high' : 'warning', f.message, { field: f.field }))
     )
   );
 
@@ -534,7 +534,7 @@ function runAllocate(options = {}) {
   store.write(s);
 
   if (!rpamOk && !skipValidationGate) {
-    const err = new Error(`RPAM allocation failed business validation (${post.summary.errors} error(s))`);
+    const err = new Error(`ALC allocation failed business validation (${post.summary.errors} error(s))`);
     err.validation = post;
     throw err;
   }
@@ -543,8 +543,8 @@ function runAllocate(options = {}) {
 
 function runForms() {
   const s = store.read();
-  if (!s.taxComputation || !s.allocations) throw new Error('Complete TIM + RPAM before Forms Print');
-  const job = startJob(s, 'forms-print-package', 'ERE / Forms Print');
+  if (!s.taxComputation || !s.allocations) throw new Error('Complete TAX + ALC before Forms & Documents');
+  const job = startJob(s, 'forms-print-package', 'DOC');
 
   s.form1065 = {
     form: '1065',
@@ -596,8 +596,8 @@ function runForms() {
   };
 
   s.issues = mergeIssues(s.issues, [
-    issue('CT-16', 'FORMS', 'info', 'Form 1065 line 22 bound to tax engine ordinary income'),
-    issue('CT-17', 'FORMS', 'info', 'Partner capital rollforward restated for K-1 Part II'),
+    issue('CT-16', 'DOC', 'info', 'Form 1065 line 22 bound to tax engine ordinary income'),
+    issue('CT-17', 'DOC', 'info', 'Partner capital rollforward restated for K-1 Part II'),
   ]);
   completeJob(s, job, 'succeeded');
   passGate(s, 'AQG4');
@@ -613,7 +613,7 @@ function runEfile() {
   if (openHigh.length) {
     throw new Error(`Cannot e-file with ${openHigh.length} high-severity open issue(s)`);
   }
-  const job = startJob(s, 'mef-submit', 'Forms Print');
+  const job = startJob(s, 'mef-submit', 'DOC');
 
   s.efile = {
     channel: 'IRS MeF',
@@ -704,10 +704,10 @@ function mergeIssues(existing = [], incoming = []) {
   return [...map.values()];
 }
 
-function importCemExcel(buffer, fileName = 'cem.xlsx') {
+function importCemExcel(buffer, fileName = 'clm.xlsx') {
   const parsed = parseCem(buffer);
   const s = store.read();
-  const job = startJob(s, 'cem-excel-import', 'CEM');
+  const job = startJob(s, 'cem-excel-import', 'CLM');
   Object.assign(s, {
     clientId: parsed.clientId,
     engagementId: parsed.engagementId,
@@ -730,16 +730,16 @@ function importCemExcel(buffer, fileName = 'cem.xlsx') {
     };
   }
   s.imports = s.imports || {};
-  s.imports.cem = {
+  s.imports.clm = s.imports.cem = {
     fileName,
     importedAt: new Date().toISOString(),
     rows: 1,
     entityName: parsed.entityName || null,
   };
   s.published = s.published || {};
-  s.published.cem = {
+  s.published.clm = s.published.cem = {
     at: new Date().toISOString(),
-    consumedBy: ['MAD', 'CAM', 'TIM'],
+    consumedBy: ['MDM', 'ACC', 'TAX'],
     payload: dataFlow.cemPayload(s),
   };
   clearDownstream(s, 'cem');
@@ -755,33 +755,33 @@ function importCemExcel(buffer, fileName = 'cem.xlsx') {
     fileName,
     engagementId: s.engagementId,
     entityName: s.entityName,
-    flowsTo: ['MAD', 'CAM', 'TIM'],
+    flowsTo: ['MDM', 'ACC', 'TAX'],
   });
   store.write(s);
   return snapshot();
 }
 
-function importMadExcel(buffer, fileName = 'mad.xlsx') {
+function importMadExcel(buffer, fileName = 'mdm.xlsx') {
   const parsed = parseMad(buffer);
   const s = store.read();
   if (!dataFlow.hasCem(s)) {
-    throw new Error('Upload CEM Excel first — MAD consumes engagement / project / job context from CEM');
+    throw new Error('Upload CLM Excel first — MDM consumes engagement / project / job context from CLM');
   }
-  const job = startJob(s, 'mad-excel-import', 'MAD');
+  const job = startJob(s, 'mad-excel-import', 'MDM');
   s.entity = parsed.entity;
   s.partners = parsed.partners;
   s.imports = s.imports || {};
-  s.imports.mad = {
+  s.imports.mdm = s.imports.mad = {
     fileName,
     importedAt: new Date().toISOString(),
     entityId: parsed.entity.entityId,
     partnerCount: parsed.partners.length,
   };
   s.published = s.published || {};
-  s.published.mad = {
+  s.published.mdm = s.published.mad = {
     at: new Date().toISOString(),
-    consumedFrom: ['CEM'],
-    consumedBy: ['CAM', 'TIM'],
+    consumedFrom: ['CLM'],
+    consumedBy: ['ACC', 'TAX'],
     payload: dataFlow.madPayload(s),
   };
   clearDownstream(s, 'mad');
@@ -793,22 +793,22 @@ function importMadExcel(buffer, fileName = 'mad.xlsx') {
   store.log(s, 'mad.excel_import', {
     fileName,
     entityId: s.entity.entityId,
-    flowsTo: ['CAM', 'TIM'],
+    flowsTo: ['ACC', 'TAX'],
   });
   store.write(s);
   return snapshot();
 }
 
-function importCamExcel(buffer, fileName = 'cam.xlsx') {
+function importCamExcel(buffer, fileName = 'acc.xlsx') {
   const parsed = parseCam(buffer);
   let s = store.read();
   if (!dataFlow.hasCem(s) || !dataFlow.hasMad(s)) {
-    throw new Error('Upload CEM and MAD Excel first — CAM consumes engagement + entity/partners, then feeds TIM and RPAM');
+    throw new Error('Upload CLM and MDM Excel first — ACC consumes engagement + entity/partners, then feeds TAX and ALC');
   }
-  const job = startJob(s, 'cam-excel-import', 'CAM');
+  const job = startJob(s, 'cam-excel-import', 'ACC');
   s.trialBalance = parsed.trialBalance;
   s.imports = s.imports || {};
-  s.imports.cam = {
+  s.imports.acc = s.imports.cam = {
     fileName,
     importedAt: new Date().toISOString(),
     accountCount: parsed.trialBalance.length,
@@ -828,10 +828,10 @@ function importCamExcel(buffer, fileName = 'cam.xlsx') {
   }));
 
   s.published = s.published || {};
-  s.published.cam = {
+  s.published.acc = s.published.cam = {
     at: new Date().toISOString(),
-    consumedFrom: ['CEM', 'MAD'],
-    consumedBy: ['TIM', 'RPAM'],
+    consumedFrom: ['CLM', 'MDM'],
+    consumedBy: ['TAX', 'ALC'],
     payload: {
       fromCem: dataFlow.cemPayload(s),
       fromMad: dataFlow.madPayload(s),
@@ -850,7 +850,7 @@ function importCamExcel(buffer, fileName = 'cam.xlsx') {
   store.log(s, 'cam.excel_import', {
     fileName,
     accounts: s.trialBalance.length,
-    flowsTo: ['TIM', 'RPAM'],
+    flowsTo: ['TAX', 'ALC'],
   });
   store.write(s);
 
@@ -878,8 +878,8 @@ function processAfterCam() {
     ordinary: s.taxComputation?.ordinaryBusinessIncome,
     partners: s.allocations?.partners?.length,
     packageId: s.printPackage?.packageId,
-    timValidation: s.validations?.tim?.summary,
-    rpamValidation: s.validations?.rpam?.summary,
+    taxValidation: s.validations?.tax?.summary,
+    alcValidation: s.validations?.alc?.summary,
   });
   store.write(s);
   return snapshot();
@@ -889,7 +889,7 @@ function getTimValidation() {
   const s = store.read();
   const result = validateTim(s);
   s.validations = s.validations || {};
-  s.validations.tim = result;
+  s.validations.tax = result;
   store.write(s);
   return result;
 }
@@ -898,7 +898,7 @@ function getRpamValidation() {
   const s = store.read();
   const result = validateRpam(s);
   s.validations = s.validations || {};
-  s.validations.rpam = result;
+  s.validations.alc = result;
   store.write(s);
   return result;
 }
@@ -906,7 +906,7 @@ function getRpamValidation() {
 function processFlow() {
   const s = store.read();
   if (!dataFlow.hasCem(s) || !dataFlow.hasMad(s) || !dataFlow.hasCam(s)) {
-    throw new Error('Need CEM + MAD + CAM uploads before processing TIM → RPAM → Forms');
+    throw new Error('Need CLM + MDM + ACC uploads before processing TAX → ALC → DOC');
   }
   // Ensure CAM maps exist
   if (!s.accountMaps?.length) {

@@ -3,12 +3,12 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const procs = [
-  ['CEM', 'services/cem/index.js'],
-  ['MAD', 'services/mad/index.js'],
-  ['CAM', 'services/cam/index.js'],
-  ['TIM', 'services/tim/index.js'],
-  ['RPAM', 'services/rpam/index.js'],
-  ['FORMS', 'services/forms-print/index.js'],
+  ['CLM', 'services/cem/index.js'],
+  ['MDM', 'services/mad/index.js'],
+  ['ACC', 'services/cam/index.js'],
+  ['TAX', 'services/tim/index.js'],
+  ['ALC', 'services/rpam/index.js'],
+  ['DOC', 'services/forms-print/index.js'],
   ['Gateway', 'gateway/index.js'],
 ];
 
@@ -41,5 +41,5 @@ process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
 console.log('TaxMesh — starting 6 microservices + gateway');
-console.log('  CEM  :4101  MAD :4102  CAM :4103  TIM :4104  RPAM :4105  Forms :4106');
+console.log('  CLM :4101  MDM :4102  ACC :4103  TAX :4104  ALC :4105  DOC :4106');
 console.log('UI: http://127.0.0.1:4100');

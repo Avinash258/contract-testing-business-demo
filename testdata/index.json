@@ -4,9 +4,9 @@
       "id": "set-01",
       "label": "Alpha Partners LP (baseline NY/CA)",
       "files": {
-        "cem": "/testdata/set-01/cem.xlsx",
-        "mad": "/testdata/set-01/mad.xlsx",
-        "cam": "/testdata/set-01/cam.xlsx"
+        "clm": "/testdata/set-01/clm.xlsx",
+        "mdm": "/testdata/set-01/mdm.xlsx",
+        "acc": "/testdata/set-01/acc.xlsx"
       },
       "meta": {
         "partners": 2,
@@ -17,9 +17,9 @@
       "id": "set-02",
       "label": "Beta Holdings LP (TX/FL — 3 partners, full TB)",
       "files": {
-        "cem": "/testdata/set-02/cem.xlsx",
-        "mad": "/testdata/set-02/mad.xlsx",
-        "cam": "/testdata/set-02/cam.xlsx"
+        "clm": "/testdata/set-02/clm.xlsx",
+        "mdm": "/testdata/set-02/mdm.xlsx",
+        "acc": "/testdata/set-02/acc.xlsx"
       },
       "meta": {
         "partners": 3,
@@ -30,9 +30,9 @@
       "id": "set-03",
       "label": "Gamma Ventures LP (CA — 4 partners, full TB)",
       "files": {
-        "cem": "/testdata/set-03/cem.xlsx",
-        "mad": "/testdata/set-03/mad.xlsx",
-        "cam": "/testdata/set-03/cam.xlsx"
+        "clm": "/testdata/set-03/clm.xlsx",
+        "mdm": "/testdata/set-03/mdm.xlsx",
+        "acc": "/testdata/set-03/acc.xlsx"
       },
       "meta": {
         "partners": 4,
@@ -43,9 +43,9 @@
       "id": "set-04",
       "label": "Delta Capital LP (NY/NJ/CT — 5 partners, full TB)",
       "files": {
-        "cem": "/testdata/set-04/cem.xlsx",
-        "mad": "/testdata/set-04/mad.xlsx",
-        "cam": "/testdata/set-04/cam.xlsx"
+        "clm": "/testdata/set-04/clm.xlsx",
+        "mdm": "/testdata/set-04/mdm.xlsx",
+        "acc": "/testdata/set-04/acc.xlsx"
       },
       "meta": {
         "partners": 5,
@@ -56,9 +56,9 @@
       "id": "set-05",
       "label": "Epsilon Fund LP (IL/OH/MI — 4 partners, high M-1)",
       "files": {
-        "cem": "/testdata/set-05/cem.xlsx",
-        "mad": "/testdata/set-05/mad.xlsx",
-        "cam": "/testdata/set-05/cam.xlsx"
+        "clm": "/testdata/set-05/clm.xlsx",
+        "mdm": "/testdata/set-05/mdm.xlsx",
+        "acc": "/testdata/set-05/acc.xlsx"
       },
       "meta": {
         "partners": 4,

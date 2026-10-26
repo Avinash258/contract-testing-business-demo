@@ -178,7 +178,7 @@ function validateTim(s) {
     }
   }
 
-  return summarize('TIM', findings);
+  return summarize('TAX', findings);
 }
 
 /**
@@ -382,7 +382,7 @@ function validateRpam(s) {
     }
   }
 
-  return summarize('RPAM', findings);
+  return summarize('ALC', findings);
 }
 
 function summarize(module, findings) {

@@ -3,3 +3,6 @@ node_modules/
 .env
 *.log
 .qodo/
+data/
+desktop.ini
+Thumbs.db

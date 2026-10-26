@@ -1,5 +1,6 @@
 const multer = require('multer');
 const filing = require('./filingEngine');
+const { resolveServiceId } = require('./contracts');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -11,12 +12,13 @@ const upload = multer({
 });
 
 function attachExcelUpload(app, moduleName) {
+  const id = resolveServiceId(moduleName);
   const importers = {
-    CEM: filing.importCemExcel,
-    MAD: filing.importMadExcel,
-    CAM: filing.importCamExcel,
+    CLM: filing.importCemExcel,
+    MDM: filing.importMadExcel,
+    ACC: filing.importCamExcel,
   };
-  const importer = importers[moduleName];
+  const importer = importers[id];
   if (!importer) return;
 
   app.post('/upload', upload.single('file'), (req, res) => {
@@ -25,8 +27,8 @@ function attachExcelUpload(app, moduleName) {
       const snapshot = importer(req.file.buffer, req.file.originalname);
       res.json({
         ok: true,
-        module: moduleName,
-        service: moduleName,
+        module: id,
+        service: id,
         fileName: req.file.originalname,
         snapshot,
       });

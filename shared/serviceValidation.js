@@ -1,13 +1,14 @@
 /**
- * TIM / RPAM microservice APIs for business validation and calculate/allocate.
+ * TAX / ALC microservice APIs for business validation and calculate/allocate.
  */
 const filing = require('./filingEngine');
+const { resolveServiceId } = require('./contracts');
 
-function attachTimApis(app) {
+function attachTaxApis(app) {
   app.get('/validate', (_req, res) => {
     const validation = filing.getTimValidation();
     res.status(validation.ok ? 200 : 422).json({
-      service: 'TIM',
+      service: 'TAX',
       ...validation,
       snapshot: filing.snapshot(),
     });
@@ -16,7 +17,7 @@ function attachTimApis(app) {
   app.post('/validate', (_req, res) => {
     const validation = filing.getTimValidation();
     res.status(validation.ok ? 200 : 422).json({
-      service: 'TIM',
+      service: 'TAX',
       ...validation,
       snapshot: filing.snapshot(),
     });
@@ -27,10 +28,10 @@ function attachTimApis(app) {
       const force = !!(req.body && req.body.force);
       filing.runTax({ skipValidationGate: force });
       const snap = filing.snapshot();
-      const validation = snap.validations?.tim || filing.getTimValidation();
+      const validation = snap.validations?.tax || snap.validations?.tim || filing.getTimValidation();
       res.status(validation.ok ? 200 : 422).json({
         ok: validation.ok,
-        service: 'TIM',
+        service: 'TAX',
         action: 'calculate',
         validation,
         taxComputation: snap.taxComputation,
@@ -40,7 +41,7 @@ function attachTimApis(app) {
     } catch (err) {
       res.status(422).json({
         ok: false,
-        service: 'TIM',
+        service: 'TAX',
         action: 'calculate',
         error: String(err.message || err),
         validation: err.validation || filing.getTimValidation(),
@@ -52,19 +53,19 @@ function attachTimApis(app) {
   app.get('/tax-computation', (_req, res) => {
     const snap = filing.snapshot();
     res.json({
-      service: 'TIM',
+      service: 'TAX',
       taxComputation: snap.taxComputation,
       bookToTax: snap.bookToTax,
-      validation: snap.validations?.tim || null,
+      validation: snap.validations?.tax || snap.validations?.tim || null,
     });
   });
 }
 
-function attachRpamApis(app) {
+function attachAlcApis(app) {
   app.get('/validate', (_req, res) => {
     const validation = filing.getRpamValidation();
     res.status(validation.ok ? 200 : 422).json({
-      service: 'RPAM',
+      service: 'ALC',
       ...validation,
       snapshot: filing.snapshot(),
     });
@@ -73,7 +74,7 @@ function attachRpamApis(app) {
   app.post('/validate', (_req, res) => {
     const validation = filing.getRpamValidation();
     res.status(validation.ok ? 200 : 422).json({
-      service: 'RPAM',
+      service: 'ALC',
       ...validation,
       snapshot: filing.snapshot(),
     });
@@ -84,10 +85,10 @@ function attachRpamApis(app) {
       const force = !!(req.body && req.body.force);
       filing.runAllocate({ skipValidationGate: force });
       const snap = filing.snapshot();
-      const validation = snap.validations?.rpam || filing.getRpamValidation();
+      const validation = snap.validations?.alc || snap.validations?.rpam || filing.getRpamValidation();
       res.status(validation.ok ? 200 : 422).json({
         ok: validation.ok,
-        service: 'RPAM',
+        service: 'ALC',
         action: 'allocate',
         validation,
         allocations: snap.allocations,
@@ -96,7 +97,7 @@ function attachRpamApis(app) {
     } catch (err) {
       res.status(422).json({
         ok: false,
-        service: 'RPAM',
+        service: 'ALC',
         action: 'allocate',
         error: String(err.message || err),
         validation: err.validation || filing.getRpamValidation(),
@@ -108,17 +109,23 @@ function attachRpamApis(app) {
   app.get('/allocations', (_req, res) => {
     const snap = filing.snapshot();
     res.json({
-      service: 'RPAM',
+      service: 'ALC',
       allocations: snap.allocations,
-      validation: snap.validations?.rpam || null,
+      validation: snap.validations?.alc || snap.validations?.rpam || null,
     });
   });
 }
 
 function attachBusinessValidationApis(app, serviceId) {
-  const id = String(serviceId).toUpperCase();
-  if (id === 'TIM') attachTimApis(app);
-  if (id === 'RPAM') attachRpamApis(app);
+  const id = resolveServiceId(serviceId);
+  if (id === 'TAX') attachTaxApis(app);
+  if (id === 'ALC') attachAlcApis(app);
 }
 
-module.exports = { attachBusinessValidationApis, attachTimApis, attachRpamApis };
+module.exports = {
+  attachBusinessValidationApis,
+  attachTaxApis,
+  attachAlcApis,
+  attachTimApis: attachTaxApis,
+  attachRpamApis: attachAlcApis,
+};

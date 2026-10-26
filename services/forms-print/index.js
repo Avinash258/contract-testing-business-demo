@@ -1,6 +1,6 @@
 const { createService } = require('../../shared/createService');
 
-const { app, meta } = createService('FORMS');
+const { app, meta } = createService('DOC');
 app.listen(meta.port, () => {
-  console.log(`[FORMS] ${meta.name} listening on http://127.0.0.1:${meta.port}`);
+  console.log(`[DOC] ${meta.name} listening on http://127.0.0.1:${meta.port}`);
 });
