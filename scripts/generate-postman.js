@@ -162,6 +162,24 @@ for (const id of SERVICE_ORDER) {
       })
     );
   }
+  if (id === 'CLM') {
+    items.push(
+      get('CLM v2 engagement', '/api/proxy/CLM/v2/engagement'),
+      get('CLM v2 status', '/api/proxy/CLM/v2/status'),
+      req('CLM v2 patch engagement', 'PATCH', '/api/proxy/CLM/v2/engagement', {
+        description: 'Update entityName / taxYear / etc.',
+        body: { entityName: 'Alpha Partners LP', taxYear: 2025 },
+      })
+    );
+  }
+  if (id === 'MDM') {
+    items.push(
+      get('MDM v2 entity', '/api/proxy/MDM/v2/entity'),
+      get('MDM v2 partners', '/api/proxy/MDM/v2/partners'),
+      get('MDM v2 ownership', '/api/proxy/MDM/v2/ownership'),
+      get('MDM v2 status', '/api/proxy/MDM/v2/status')
+    );
+  }
   if (id === 'TAX') {
     items.push(
       get('TAX validate', `/api/proxy/TAX/validate`),
