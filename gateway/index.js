@@ -148,6 +148,56 @@ app.get('/download/architecture-guide', (_req, res) => {
   });
 });
 
+/** Postman collection + environment (Import → File in Postman) */
+app.get('/download/postman-collection', (_req, res) => {
+  const file = path.join(__dirname, '../postman/TaxMesh.postman_collection.json');
+  res.download(file, 'TaxMesh.postman_collection.json', (err) => {
+    if (err && !res.headersSent) {
+      res.status(404).json({ error: 'Postman collection missing. Run npm run generate:postman' });
+    }
+  });
+});
+app.get('/download/postman-environment', (_req, res) => {
+  const file = path.join(__dirname, '../postman/TaxMesh.postman_environment.json');
+  res.download(file, 'TaxMesh.postman_environment.json', (err) => {
+    if (err && !res.headersSent) {
+      res.status(404).json({ error: 'Postman environment missing. Run npm run generate:postman' });
+    }
+  });
+});
+app.get('/download/postman.zip', async (_req, res) => {
+  try {
+    const dir = path.join(__dirname, '../postman');
+    if (!fs.existsSync(path.join(dir, 'TaxMesh.postman_collection.json'))) {
+      return res.status(404).json({ error: 'Postman files missing. Run npm run generate:postman' });
+    }
+    const tmp = path.join(os.tmpdir(), `taxmesh-postman-${Date.now()}.zip`);
+    await new Promise((resolve, reject) => {
+      const output = fs.createWriteStream(tmp);
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      output.on('close', resolve);
+      archive.on('error', reject);
+      archive.pipe(output);
+      archive.file(path.join(dir, 'TaxMesh.postman_collection.json'), {
+        name: 'TaxMesh.postman_collection.json',
+      });
+      archive.file(path.join(dir, 'TaxMesh.postman_environment.json'), {
+        name: 'TaxMesh.postman_environment.json',
+      });
+      archive.finalize();
+    });
+    res.download(tmp, 'TaxMesh-postman.zip', () => {
+      try {
+        fs.unlinkSync(tmp);
+      } catch {
+        /* ignore */
+      }
+    });
+  } catch (err) {
+    if (!res.headersSent) res.status(500).json({ error: String(err.message || err) });
+  }
+});
+
 /** Download all Excel demo sets as a zip */
 app.get('/download/testdata', (_req, res) => {
   sendTestdataZip(res, 'taxmesh-testdata.zip', null);

@@ -111,6 +111,9 @@ Entity **display name** comes from **CLM** (`entityName`). EIN and partner detai
 | GET | `/api/contracts/{id}` | Contract metadata + sample (`CT-00` … `CT-17`) |
 | GET | `/openapi.json` | OpenAPI 3.0 (dynamic `servers` for tunnel host) |
 | GET | `/api-docs` | Swagger UI |
+| GET | `/download/postman-collection` | Postman collection JSON (all APIs) |
+| GET | `/download/postman-environment` | Postman environment JSON |
+| GET | `/download/postman.zip` | Collection + environment ZIP |
 
 ---
 

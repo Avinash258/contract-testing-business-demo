@@ -35,6 +35,7 @@ npm start
 | http://127.0.0.1:4100/api-docs | **Swagger** (same-origin servers — works behind Cloudflare tunnels) |
 | http://127.0.0.1:4100/openapi.json | OpenAPI JSON |
 | http://127.0.0.1:4100/api/flow | Downstream + upstream catalog |
+| http://127.0.0.1:4100/download/postman.zip | **Postman collection + environment** |
 
 ```bash
 npm run test:contracts

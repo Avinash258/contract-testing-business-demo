@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "TaxMesh — Tax Demo Microservices",
-    "description": "Partnership tax pipeline APIs for the NV Contract Testing case study. 5 services · 17 contracts (CT-01…CT-17). Import with the TaxMesh environment.",
+    "name": "TaxMesh — CLM MDM ACC TAX ALC DOC",
+    "description": "TaxMesh partnership Form 1065 demo APIs.\n\n**Workspaces:** CLM · MDM · ACC · TAX · ALC · DOC\n**Contracts:** CT-00 … CT-17 (10 downstream + 8 upstream)\n**Flow:** GET /api/flow · /api/proxy/{svc}/downstream|{upstream}/{peer}\n\nImport with **TaxMesh Local** environment. Set `baseUrl` to your gateway\n(local http://127.0.0.1:4100 or Cloudflare tunnel HTTPS URL).\n\nExcel uploads: select file from testdata/set-0N/{clm,mdm,acc}.xlsx",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -25,7 +25,7 @@
               }
             ],
             "url": "{{baseUrl}}/api/health",
-            "description": "Gateway + A–E health snapshot"
+            "description": "Gateway + CLM…DOC health"
           }
         },
         {
@@ -43,6 +43,48 @@
           }
         },
         {
+          "name": "List contracts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/contracts",
+            "description": "All CT-00…CT-17"
+          }
+        },
+        {
+          "name": "List contracts — downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/contracts?direction=downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "List contracts — upstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/contracts?direction=upstream",
+            "description": ""
+          }
+        },
+        {
           "name": "Contract CT-01 detail",
           "request": {
             "method": "GET",
@@ -57,6 +99,20 @@
           }
         },
         {
+          "name": "Contract CT-00 detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/contracts/CT-00",
+            "description": ""
+          }
+        },
+        {
           "name": "OpenAPI JSON",
           "request": {
             "method": "GET",
@@ -67,13 +123,228 @@
               }
             ],
             "url": "{{baseUrl}}/openapi.json",
-            "description": "OpenAPI 3.0 document"
+            "description": "Dynamic servers (same-origin / tunnel-safe)"
           }
         }
       ]
     },
     {
-      "name": "01 Filing — Form 1065 journey",
+      "name": "01 Data flow — downstream & upstream",
+      "item": [
+        {
+          "name": "Full flow catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow",
+            "description": "Peers, edges, endpoint map"
+          }
+        },
+        {
+          "name": "All edges",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/edges",
+            "description": ""
+          }
+        },
+        {
+          "name": "Downstream edges only",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/edges?direction=downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "Upstream edges only",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/edges?direction=upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "Downstream MDM → TAX",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/downstream/MDM/TAX",
+            "description": "CT-02 live + sample"
+          }
+        },
+        {
+          "name": "Downstream ACC → TAX",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/downstream/ACC/TAX",
+            "description": "CT-06"
+          }
+        },
+        {
+          "name": "Downstream ACC → ALC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/downstream/ACC/ALC",
+            "description": "CT-07"
+          }
+        },
+        {
+          "name": "Downstream TAX → ALC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/downstream/TAX/ALC",
+            "description": "CT-10"
+          }
+        },
+        {
+          "name": "Downstream TAX → DOC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/downstream/TAX/DOC",
+            "description": "CT-11"
+          }
+        },
+        {
+          "name": "Downstream ALC → DOC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/downstream/ALC/DOC",
+            "description": "CT-14"
+          }
+        },
+        {
+          "name": "Downstream CLM → MDM",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/downstream/CLM/MDM",
+            "description": "CT-00"
+          }
+        },
+        {
+          "name": "Upstream TAX → MDM",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/upstream/TAX/MDM",
+            "description": "CT-08"
+          }
+        },
+        {
+          "name": "Upstream TAX → ACC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/upstream/TAX/ACC",
+            "description": "CT-09"
+          }
+        },
+        {
+          "name": "Upstream ALC → MDM",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/upstream/ALC/MDM",
+            "description": "CT-12"
+          }
+        },
+        {
+          "name": "Upstream DOC → MDM",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/flow/upstream/DOC/MDM",
+            "description": "CT-15"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Filing — Form 1065 journey",
       "item": [
         {
           "name": "GET filing snapshot",
@@ -86,132 +357,56 @@
               }
             ],
             "url": "{{baseUrl}}/api/filing",
-            "description": "CEM→Forms engagement state"
+            "description": "Engagement + dataFlow + validations"
           }
         },
         {
-          "name": "Reset engagement",
+          "name": "Reset engagement (blank)",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": "{{baseUrl}}/api/filing/reset",
-            "description": ""
+            "description": "Clears banner, uploads, calcs",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
           }
         },
         {
-          "name": "Run CEM",
+          "name": "Data-flow graph",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [
               {
                 "key": "Accept",
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/filing/run/cem",
+            "url": "{{baseUrl}}/api/filing/data-flow",
             "description": ""
           }
         },
         {
-          "name": "Run MAD setup",
+          "name": "List Excel datasets",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [
               {
                 "key": "Accept",
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/filing/run/setup",
-            "description": ""
-          }
-        },
-        {
-          "name": "Run CAM books",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/filing/run/books",
-            "description": ""
-          }
-        },
-        {
-          "name": "Run TIM tax",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/filing/run/tax",
-            "description": ""
-          }
-        },
-        {
-          "name": "Run RPAM allocate",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/filing/run/allocate",
-            "description": ""
-          }
-        },
-        {
-          "name": "Run Forms Print",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/filing/run/forms",
-            "description": ""
-          }
-        },
-        {
-          "name": "Run MeF e-file",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/filing/run/efile",
-            "description": ""
-          }
-        },
-        {
-          "name": "Run full journey",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/filing/run-all",
+            "url": "{{baseUrl}}/api/filing/datasets",
             "description": ""
           }
         },
@@ -256,14 +451,1117 @@
             "url": "{{baseUrl}}/api/filing/jobs",
             "description": ""
           }
+        },
+        {
+          "name": "Process flow (TAX→ALC→DOC)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/process-flow",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Run step — cem",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/run/cem",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Run step — setup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/run/setup",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Run step — books",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/run/books",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Run step — tax",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/run/tax",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Run step — allocate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/run/allocate",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Run step — forms",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/run/forms",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Run step — efile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/run/efile",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Run full journey (seeded)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/run-all",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Validate TAX",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/validate/tax",
+            "description": ""
+          }
+        },
+        {
+          "name": "Validate ALC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/validate/alc",
+            "description": ""
+          }
+        },
+        {
+          "name": "Calculate TAX",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/tax/calculate",
+            "description": "Force with body { \"force\": true }",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"force\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Allocate ALC",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/alc/allocate",
+            "description": "Force with body { \"force\": true }",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"force\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Upload CLM Excel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/upload/clm",
+            "description": "Multipart field **file** = testdata/set-01/clm.xlsx",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select clm.xlsx from testdata/set-0N/"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload MDM Excel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/upload/mdm",
+            "description": "Multipart field **file** = mdm.xlsx (needs CLM first)",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select mdm.xlsx"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload ACC Excel & process",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/filing/upload/acc",
+            "description": "Multipart field **file** = acc.xlsx → auto TAX→ALC→DOC",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select acc.xlsx"
+                }
+              ]
+            }
+          }
         }
       ]
     },
     {
-      "name": "Service CEM — Client Engagement",
+      "name": "03 Downloads",
       "item": [
         {
-          "name": "CEM health",
+          "name": "Architecture guide (.docx)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/download/architecture-guide",
+            "description": ""
+          }
+        },
+        {
+          "name": "All testdata ZIP",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/download/testdata.zip",
+            "description": ""
+          }
+        },
+        {
+          "name": "Testdata set-01 ZIP",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/download/testdata/set-01.zip",
+            "description": ""
+          }
+        },
+        {
+          "name": "Postman collection JSON",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/download/postman-collection",
+            "description": ""
+          }
+        },
+        {
+          "name": "Postman environment JSON",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/download/postman-environment",
+            "description": ""
+          }
+        },
+        {
+          "name": "OpenAPI JSON file",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/openapi.json",
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Contracts CT-00…CT-17",
+      "item": [
+        {
+          "name": "CT-00 CLM→MDM (downstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-00/engagement-context",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/CLM/contracts/ct-00/engagement-context",
+                "description": "Engagement / project / job context\n\nSample:\n```json\n{\n  \"contractId\": \"CT-00\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"clientId\": \"CLI-NV-TAX-01\",\n  \"projectId\": \"PRJ-ALPHA-1065-2025\",\n  \"entityGroupId\": \"EG-ALPHA\",\n  \"jobId\": \"JOB-TY2025-001\",\n  \"taxYear\": 2025,\n  \"formType\": \"1065\",\n  \"dueDate\": \"2026-03-15\"\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as MDM",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/MDM/consume/CT-00",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-01 MDM→ACC (downstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-01/entities",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/MDM/contracts/ct-01/entities",
+                "description": "Entities for account mapping\n\nSample:\n```json\n{\n  \"contractId\": \"CT-01\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entities\": [\n    {\n      \"entityId\": \"ENT-ALPHA-LP\",\n      \"legalName\": \"Alpha Partners LP\",\n      \"ein\": \"12-3456789\",\n      \"entityType\": \"partnership\",\n      \"taxYear\": 2025\n    },\n    {\n      \"entityId\": \"ENT-BETA-LLC\",\n      \"legalName\": \"Beta Holdings LLC\",\n      \"ein\": \"98-7654321\",\n      \"entityType\": \"disregarded\",\n      \"taxYear\": 2025\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as ACC",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ACC/consume/CT-01",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-02 MDM→TAX (downstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-02/tax-attributes",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/MDM/contracts/ct-02/tax-attributes",
+                "description": "Entity tax attributes\n\nSample:\n```json\n{\n  \"contractId\": \"CT-02\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"taxAttributes\": {\n    \"filingType\": \"1065\",\n    \"fiscalYearEnd\": \"12-31\",\n    \"multiState\": true,\n    \"states\": [\n      \"NY\",\n      \"CA\"\n    ],\n    \"section754Election\": true\n  }\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as TAX",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/TAX/consume/CT-02",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-03 MDM→ALC (downstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-03/ownership",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/MDM/contracts/ct-03/ownership",
+                "description": "Partner ownership\n\nSample:\n```json\n{\n  \"contractId\": \"CT-03\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"partners\": [\n    {\n      \"partnerId\": \"P-001\",\n      \"name\": \"Jordan Lee\",\n      \"ownershipPct\": 60,\n      \"capitalAccount\": \"CA-001\"\n    },\n    {\n      \"partnerId\": \"P-002\",\n      \"name\": \"Sam Rivera\",\n      \"ownershipPct\": 40,\n      \"capitalAccount\": \"CA-002\"\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as ALC",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ALC/consume/CT-03",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-04 MDM→DOC (downstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-04/filing-meta",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/MDM/contracts/ct-04/filing-meta",
+                "description": "Filing metadata\n\nSample:\n```json\n{\n  \"contractId\": \"CT-04\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"filingMeta\": {\n    \"formSet\": [\n      \"1065\",\n      \"K-1\",\n      \"K-3\"\n    ],\n    \"jurisdiction\": \"US-FED\",\n    \"printPackageId\": null,\n    \"dueDate\": \"2026-03-15\"\n  }\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as DOC",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/DOC/consume/CT-04",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-05 ACC→MDM (upstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-05/mapping-gaps",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ACC/contracts/ct-05/mapping-gaps",
+                "description": "Missing entity / account codes\n\nSample:\n```json\n{\n  \"contractId\": \"CT-05\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"gaps\": [\n    {\n      \"code\": \"MISSING_ENTITY\",\n      \"accountCode\": \"1700\",\n      \"message\": \"No master entity for intercompany account 1700\"\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as MDM",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/MDM/consume/CT-05",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-06 ACC→TAX (downstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-06/book-balances",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ACC/contracts/ct-06/book-balances",
+                "description": "Book account balances\n\nSample:\n```json\n{\n  \"contractId\": \"CT-06\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"bookBalances\": [\n    {\n      \"accountCode\": \"4000\",\n      \"accountName\": \"Ordinary Income\",\n      \"bookAmount\": 1250000,\n      \"currency\": \"USD\"\n    },\n    {\n      \"accountCode\": \"5000\",\n      \"accountName\": \"Guaranteed Payments\",\n      \"bookAmount\": 80000,\n      \"currency\": \"USD\"\n    },\n    {\n      \"accountCode\": \"1700\",\n      \"accountName\": \"Depreciation\",\n      \"bookAmount\": -45000,\n      \"currency\": \"USD\"\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as TAX",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/TAX/consume/CT-06",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-07 ACC→ALC (downstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-07/capital-map",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ACC/contracts/ct-07/capital-map",
+                "description": "Capital account mappings\n\nSample:\n```json\n{\n  \"contractId\": \"CT-07\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"capitalMap\": [\n    {\n      \"partnerId\": \"P-001\",\n      \"capitalAccount\": \"CA-001\",\n      \"beginningCapital\": 500000,\n      \"contributions\": 0,\n      \"distributions\": 50000\n    },\n    {\n      \"partnerId\": \"P-002\",\n      \"capitalAccount\": \"CA-002\",\n      \"beginningCapital\": 320000,\n      \"contributions\": 25000,\n      \"distributions\": 20000\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as ALC",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ALC/consume/CT-07",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-08 TAX→MDM (upstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-08/attribute-gaps",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/TAX/contracts/ct-08/attribute-gaps",
+                "description": "Tax attribute corrections\n\nSample:\n```json\n{\n  \"contractId\": \"CT-08\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"attributeGaps\": [\n    {\n      \"field\": \"section754Election\",\n      \"severity\": \"warning\",\n      \"message\": \"Confirm 754 election status for tax year\"\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as MDM",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/MDM/consume/CT-08",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-09 TAX→ACC (upstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-09/btt-asks",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/TAX/contracts/ct-09/btt-asks",
+                "description": "Book-to-tax reconciling asks\n\nSample:\n```json\n{\n  \"contractId\": \"CT-09\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"bttAsks\": [\n    {\n      \"accountCode\": \"1700\",\n      \"ask\": \"Provide tax depreciation schedule for book-to-tax\",\n      \"priority\": \"high\"\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as ACC",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ACC/consume/CT-09",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-10 TAX→ALC (downstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-10/taxable-income",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/TAX/contracts/ct-10/taxable-income",
+                "description": "Taxable income buckets\n\nSample:\n```json\n{\n  \"contractId\": \"CT-10\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"taxableIncome\": {\n    \"ordinaryIncome\": 1180000,\n    \"interestIncome\": 12000,\n    \"guaranteedPayments\": 80000,\n    \"section179\": 15000,\n    \"currency\": \"USD\"\n  }\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as ALC",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ALC/consume/CT-10",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-11 TAX→DOC (downstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-11/tax-summary",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/TAX/contracts/ct-11/tax-summary",
+                "description": "Tax computation summary\n\nSample:\n```json\n{\n  \"contractId\": \"CT-11\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"taxSummary\": {\n    \"federalTaxableIncome\": 1197000,\n    \"stateApportionment\": {\n      \"NY\": 0.62,\n      \"CA\": 0.38\n    },\n    \"status\": \"computed\",\n    \"version\": \"TIM-2025.1\"\n  }\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as DOC",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/DOC/consume/CT-11",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-12 ALC→MDM (upstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-12/ownership-issues",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ALC/contracts/ct-12/ownership-issues",
+                "description": "Ownership validation issues\n\nSample:\n```json\n{\n  \"contractId\": \"CT-12\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"ownershipIssues\": [\n    {\n      \"partnerId\": \"P-002\",\n      \"issue\": \"Ownership % drift vs capital ratio\",\n      \"suggestedOwnershipPct\": 40\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as MDM",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/MDM/consume/CT-12",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-13 ALC→TAX (upstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-13/allocation-needs",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ALC/contracts/ct-13/allocation-needs",
+                "description": "Adjusted tax amount needs\n\nSample:\n```json\n{\n  \"contractId\": \"CT-13\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"allocationNeeds\": [\n    {\n      \"bucket\": \"ordinaryIncome\",\n      \"requiredAmount\": 1180000,\n      \"reason\": \"Special allocation SA-12\"\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as TAX",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/TAX/consume/CT-13",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-14 ALC→DOC (downstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-14/partner-allocations",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ALC/contracts/ct-14/partner-allocations",
+                "description": "Partner allocation / K-1 data\n\nSample:\n```json\n{\n  \"contractId\": \"CT-14\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"partnerAllocations\": [\n    {\n      \"partnerId\": \"P-001\",\n      \"k1\": {\n        \"ordinaryIncome\": 708000,\n        \"interestIncome\": 7200,\n        \"endingCapital\": 658000\n      }\n    },\n    {\n      \"partnerId\": \"P-002\",\n      \"k1\": {\n        \"ordinaryIncome\": 472000,\n        \"interestIncome\": 4800,\n        \"endingCapital\": 401000\n      }\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as DOC",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/DOC/consume/CT-14",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-15 DOC→MDM (upstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-15/entity-print-needs",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/DOC/contracts/ct-15/entity-print-needs",
+                "description": "Legal name / EIN for forms\n\nSample:\n```json\n{\n  \"contractId\": \"CT-15\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"printNeeds\": [\n    {\n      \"field\": \"legalName\",\n      \"required\": true\n    },\n    {\n      \"field\": \"ein\",\n      \"required\": true\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as MDM",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/MDM/consume/CT-15",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-16 DOC→TAX (upstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-16/tax-line-needs",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/DOC/contracts/ct-16/tax-line-needs",
+                "description": "Tax line amounts for forms\n\nSample:\n```json\n{\n  \"contractId\": \"CT-16\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"taxLineNeeds\": [\n    {\n      \"form\": \"1065\",\n      \"line\": \"22\",\n      \"description\": \"Ordinary business income\"\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as TAX",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/TAX/consume/CT-16",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT-17 DOC→ALC (upstream)",
+          "item": [
+            {
+              "name": "Produce — /contracts/ct-17/capital-restatement",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/DOC/contracts/ct-17/capital-restatement",
+                "description": "Partner capital restatement\n\nSample:\n```json\n{\n  \"contractId\": \"CT-17\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"capitalRestatement\": [\n    {\n      \"partnerId\": \"P-001\",\n      \"beginning\": 500000,\n      \"ending\": 658000,\n      \"restatementReason\": \"Forms package capital rollforward\"\n    },\n    {\n      \"partnerId\": \"P-002\",\n      \"beginning\": 320000,\n      \"ending\": 401000,\n      \"restatementReason\": \"Forms package capital rollforward\"\n    }\n  ]\n}\n```"
+              }
+            },
+            {
+              "name": "Consume as ALC",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/proxy/ALC/consume/CT-17",
+                "description": "Consumer pull of producer payload"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Letter & legacy aliases",
+      "item": [
+        {
+          "name": "Letter A = MDM health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/A/health",
+            "description": ""
+          }
+        },
+        {
+          "name": "Letter B = ACC health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/B/health",
+            "description": ""
+          }
+        },
+        {
+          "name": "Letter C = TAX health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/C/health",
+            "description": ""
+          }
+        },
+        {
+          "name": "Letter D = ALC health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/D/health",
+            "description": ""
+          }
+        },
+        {
+          "name": "Letter E = DOC health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/E/health",
+            "description": ""
+          }
+        },
+        {
+          "name": "Legacy CEM → CLM health",
           "request": {
             "method": "GET",
             "header": [
@@ -277,54 +1575,7 @@
           }
         },
         {
-          "name": "CEM contracts catalog",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CEM/contracts",
-            "description": ""
-          }
-        },
-        {
-          "name": "CEM pipeline probe",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CEM/pipeline",
-            "description": ""
-          }
-        },
-        {
-          "name": "CT-00 produce CEM→MAD (downstream)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CEM/contracts/ct-00/engagement-context",
-            "description": "Engagement / project / job context\n\nSample:\n{\n  \"contractId\": \"CT-00\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"clientId\": \"CLI-NV-TAX-01\",\n  \"projectId\": \"PRJ-ALPHA-1065-2025\",\n  \"entityGroupId\": \"EG-ALPHA\",\n  \"jobId\": \"JOB-TY2025-001\",\n  \"taxYear\": 2025,\n  \"formType\": \"1065\",\n  \"dueDate\": \"2026-03-15\"\n}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Service MAD — Master Data",
-      "item": [
-        {
-          "name": "MAD health",
+          "name": "Legacy MAD → MDM health",
           "request": {
             "method": "GET",
             "header": [
@@ -338,283 +1589,7 @@
           }
         },
         {
-          "name": "MAD contracts catalog",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/contracts",
-            "description": ""
-          }
-        },
-        {
-          "name": "MAD pipeline probe",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/pipeline",
-            "description": ""
-          }
-        },
-        {
-          "name": "CT-00 consume as MAD",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/consume/CT-00",
-            "description": "Consumer pull of producer payload"
-          }
-        },
-        {
-          "name": "CT-01 produce MAD→CAM (downstream)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/contracts/ct-01/entities",
-            "description": "Entities for account mapping\n\nSample:\n{\n  \"contractId\": \"CT-01\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entities\": [\n    {\n      \"entityId\": \"ENT-ALPHA-LP\",\n      \"legalName\": \"Alpha Partners LP\",\n      \"ein\": \"12-3456789\",\n      \"entityType\": \"partnership\",\n      \"taxYear\": 2025\n    },\n    {\n      \"entityId\": \"ENT-BETA-LLC\",\n      \"legalName\": \"Beta Holdings LLC\",\n      \"ein\": \"98-7654321\",\n      \"entityType\": \"disregarded\",\n      \"taxYear\": 2025\n    }\n  ]\n}"
-          }
-        },
-        {
-          "name": "CT-02 produce MAD→TIM (downstream)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/contracts/ct-02/tax-attributes",
-            "description": "Entity tax attributes\n\nSample:\n{\n  \"contractId\": \"CT-02\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"taxAttributes\": {\n    \"filingType\": \"1065\",\n    \"fiscalYearEnd\": \"12-31\",\n    \"multiState\": true,\n    \"states\": [\n      \"NY\",\n      \"CA\"\n    ],\n    \"section754Election\": true\n  }\n}"
-          }
-        },
-        {
-          "name": "CT-03 produce MAD→RPAM (downstream)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/contracts/ct-03/ownership",
-            "description": "Partner ownership\n\nSample:\n{\n  \"contractId\": \"CT-03\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"partners\": [\n    {\n      \"partnerId\": \"P-001\",\n      \"name\": \"Jordan Lee\",\n      \"ownershipPct\": 60,\n      \"capitalAccount\": \"CA-001\"\n    },\n    {\n      \"partnerId\": \"P-002\",\n      \"name\": \"Sam Rivera\",\n      \"ownershipPct\": 40,\n      \"capitalAccount\": \"CA-002\"\n    }\n  ]\n}"
-          }
-        },
-        {
-          "name": "CT-04 produce MAD→FORMS (downstream)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/contracts/ct-04/filing-meta",
-            "description": "Filing metadata\n\nSample:\n{\n  \"contractId\": \"CT-04\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"filingMeta\": {\n    \"formSet\": [\n      \"1065\",\n      \"K-1\",\n      \"K-3\"\n    ],\n    \"jurisdiction\": \"US-FED\",\n    \"printPackageId\": null,\n    \"dueDate\": \"2026-03-15\"\n  }\n}"
-          }
-        },
-        {
-          "name": "CT-05 consume as MAD",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/consume/CT-05",
-            "description": "Consumer pull of producer payload"
-          }
-        },
-        {
-          "name": "CT-08 consume as MAD",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/consume/CT-08",
-            "description": "Consumer pull of producer payload"
-          }
-        },
-        {
-          "name": "CT-12 consume as MAD",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/consume/CT-12",
-            "description": "Consumer pull of producer payload"
-          }
-        },
-        {
-          "name": "CT-15 consume as MAD",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MAD/consume/CT-15",
-            "description": "Consumer pull of producer payload"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Service CAM — Accounting",
-      "item": [
-        {
-          "name": "CAM health",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CAM/health",
-            "description": ""
-          }
-        },
-        {
-          "name": "CAM contracts catalog",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CAM/contracts",
-            "description": ""
-          }
-        },
-        {
-          "name": "CAM pipeline probe",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CAM/pipeline",
-            "description": ""
-          }
-        },
-        {
-          "name": "CT-01 consume as CAM",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CAM/consume/CT-01",
-            "description": "Consumer pull of producer payload"
-          }
-        },
-        {
-          "name": "CT-05 produce CAM→MAD (reverse)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CAM/contracts/ct-05/mapping-gaps",
-            "description": "Missing entity / account codes\n\nSample:\n{\n  \"contractId\": \"CT-05\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"gaps\": [\n    {\n      \"code\": \"MISSING_ENTITY\",\n      \"accountCode\": \"1700\",\n      \"message\": \"No master entity for intercompany account 1700\"\n    }\n  ]\n}"
-          }
-        },
-        {
-          "name": "CT-06 produce CAM→TIM (downstream)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CAM/contracts/ct-06/book-balances",
-            "description": "Book account balances\n\nSample:\n{\n  \"contractId\": \"CT-06\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"bookBalances\": [\n    {\n      \"accountCode\": \"4000\",\n      \"accountName\": \"Ordinary Income\",\n      \"bookAmount\": 1250000,\n      \"currency\": \"USD\"\n    },\n    {\n      \"accountCode\": \"5000\",\n      \"accountName\": \"Guaranteed Payments\",\n      \"bookAmount\": 80000,\n      \"currency\": \"USD\"\n    },\n    {\n      \"accountCode\": \"1700\",\n      \"accountName\": \"Depreciation\",\n      \"bookAmount\": -45000,\n      \"currency\": \"USD\"\n    }\n  ]\n}"
-          }
-        },
-        {
-          "name": "CT-07 produce CAM→RPAM (downstream)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CAM/contracts/ct-07/capital-map",
-            "description": "Capital account mappings\n\nSample:\n{\n  \"contractId\": \"CT-07\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"capitalMap\": [\n    {\n      \"partnerId\": \"P-001\",\n      \"capitalAccount\": \"CA-001\",\n      \"beginningCapital\": 500000,\n      \"contributions\": 0,\n      \"distributions\": 50000\n    },\n    {\n      \"partnerId\": \"P-002\",\n      \"capitalAccount\": \"CA-002\",\n      \"beginningCapital\": 320000,\n      \"contributions\": 25000,\n      \"distributions\": 20000\n    }\n  ]\n}"
-          }
-        },
-        {
-          "name": "CT-09 consume as CAM",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CAM/consume/CT-09",
-            "description": "Consumer pull of producer payload"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Service TIM — Tax Engine",
-      "item": [
-        {
-          "name": "TIM health",
+          "name": "Legacy TIM → TAX health",
           "request": {
             "method": "GET",
             "header": [
@@ -626,9 +1601,14 @@
             "url": "{{baseUrl}}/api/proxy/TIM/health",
             "description": ""
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "Service CLM — Client Management",
+      "item": [
         {
-          "name": "TIM contracts catalog",
+          "name": "CLM health",
           "request": {
             "method": "GET",
             "header": [
@@ -637,12 +1617,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/TIM/contracts",
+            "url": "{{baseUrl}}/api/proxy/CLM/health",
             "description": ""
           }
         },
         {
-          "name": "TIM pipeline probe",
+          "name": "CLM contracts catalog",
           "request": {
             "method": "GET",
             "header": [
@@ -651,12 +1631,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/TIM/pipeline",
+            "url": "{{baseUrl}}/api/proxy/CLM/contracts",
             "description": ""
           }
         },
         {
-          "name": "CT-02 consume as TIM",
+          "name": "CLM flow summary",
           "request": {
             "method": "GET",
             "header": [
@@ -665,12 +1645,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/TIM/consume/CT-02",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/CLM/flow",
+            "description": "Downstream + upstream peers"
           }
         },
         {
-          "name": "CT-06 consume as TIM",
+          "name": "CLM contracts/downstream",
           "request": {
             "method": "GET",
             "header": [
@@ -679,12 +1659,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/TIM/consume/CT-06",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/CLM/contracts/downstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-08 produce TIM→MAD (reverse)",
+          "name": "CLM contracts/upstream",
           "request": {
             "method": "GET",
             "header": [
@@ -693,12 +1673,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/TIM/contracts/ct-08/attribute-gaps",
-            "description": "Tax attribute corrections\n\nSample:\n{\n  \"contractId\": \"CT-08\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"attributeGaps\": [\n    {\n      \"field\": \"section754Election\",\n      \"severity\": \"warning\",\n      \"message\": \"Confirm 754 election status for tax year\"\n    }\n  ]\n}"
+            "url": "{{baseUrl}}/api/proxy/CLM/contracts/upstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-09 produce TIM→CAM (reverse)",
+          "name": "CLM consume/downstream",
           "request": {
             "method": "GET",
             "header": [
@@ -707,12 +1687,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/TIM/contracts/ct-09/btt-asks",
-            "description": "Book-to-tax reconciling asks\n\nSample:\n{\n  \"contractId\": \"CT-09\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"bttAsks\": [\n    {\n      \"accountCode\": \"1700\",\n      \"ask\": \"Provide tax depreciation schedule for book-to-tax\",\n      \"priority\": \"high\"\n    }\n  ]\n}"
+            "url": "{{baseUrl}}/api/proxy/CLM/consume/downstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-10 produce TIM→RPAM (downstream)",
+          "name": "CLM consume/upstream",
           "request": {
             "method": "GET",
             "header": [
@@ -721,12 +1701,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/TIM/contracts/ct-10/taxable-income",
-            "description": "Taxable income buckets\n\nSample:\n{\n  \"contractId\": \"CT-10\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"taxableIncome\": {\n    \"ordinaryIncome\": 1180000,\n    \"interestIncome\": 12000,\n    \"guaranteedPayments\": 80000,\n    \"section179\": 15000,\n    \"currency\": \"USD\"\n  }\n}"
+            "url": "{{baseUrl}}/api/proxy/CLM/consume/upstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-11 produce TIM→FORMS (downstream)",
+          "name": "CLM pipeline",
           "request": {
             "method": "GET",
             "header": [
@@ -735,12 +1715,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/TIM/contracts/ct-11/tax-summary",
-            "description": "Tax computation summary\n\nSample:\n{\n  \"contractId\": \"CT-11\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"taxSummary\": {\n    \"federalTaxableIncome\": 1197000,\n    \"stateApportionment\": {\n      \"NY\": 0.62,\n      \"CA\": 0.38\n    },\n    \"status\": \"computed\",\n    \"version\": \"TIM-2025.1\"\n  }\n}"
+            "url": "{{baseUrl}}/api/proxy/CLM/pipeline",
+            "description": ""
           }
         },
         {
-          "name": "CT-13 consume as TIM",
+          "name": "CLM pipeline ?direction=downstream",
           "request": {
             "method": "GET",
             "header": [
@@ -749,12 +1729,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/TIM/consume/CT-13",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/CLM/pipeline?direction=downstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-16 consume as TIM",
+          "name": "CLM pipeline ?direction=upstream",
           "request": {
             "method": "GET",
             "header": [
@@ -763,17 +1743,55 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/TIM/consume/CT-16",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/CLM/pipeline?direction=upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "CLM POST /upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/CLM/upload",
+            "description": "Direct service upload for CLM",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CLM downstream → MDM",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/CLM/downstream/MDM",
+            "description": "CT-00: Engagement / project / job context"
           }
         }
       ]
     },
     {
-      "name": "Service RPAM — Allocations",
+      "name": "Service MDM — Master Data",
       "item": [
         {
-          "name": "RPAM health",
+          "name": "MDM health",
           "request": {
             "method": "GET",
             "header": [
@@ -782,12 +1800,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/RPAM/health",
+            "url": "{{baseUrl}}/api/proxy/MDM/health",
             "description": ""
           }
         },
         {
-          "name": "RPAM contracts catalog",
+          "name": "MDM contracts catalog",
           "request": {
             "method": "GET",
             "header": [
@@ -796,12 +1814,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/RPAM/contracts",
+            "url": "{{baseUrl}}/api/proxy/MDM/contracts",
             "description": ""
           }
         },
         {
-          "name": "RPAM pipeline probe",
+          "name": "MDM flow summary",
           "request": {
             "method": "GET",
             "header": [
@@ -810,12 +1828,26 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/RPAM/pipeline",
+            "url": "{{baseUrl}}/api/proxy/MDM/flow",
+            "description": "Downstream + upstream peers"
+          }
+        },
+        {
+          "name": "MDM contracts/downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/MDM/contracts/downstream",
             "description": ""
           }
         },
         {
-          "name": "CT-03 consume as RPAM",
+          "name": "MDM contracts/upstream",
           "request": {
             "method": "GET",
             "header": [
@@ -824,12 +1856,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/RPAM/consume/CT-03",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/MDM/contracts/upstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-07 consume as RPAM",
+          "name": "MDM consume/downstream",
           "request": {
             "method": "GET",
             "header": [
@@ -838,12 +1870,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/RPAM/consume/CT-07",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/MDM/consume/downstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-10 consume as RPAM",
+          "name": "MDM consume/upstream",
           "request": {
             "method": "GET",
             "header": [
@@ -852,12 +1884,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/RPAM/consume/CT-10",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/MDM/consume/upstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-12 produce RPAM→MAD (reverse)",
+          "name": "MDM pipeline",
           "request": {
             "method": "GET",
             "header": [
@@ -866,12 +1898,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/RPAM/contracts/ct-12/ownership-issues",
-            "description": "Ownership validation issues\n\nSample:\n{\n  \"contractId\": \"CT-12\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"ownershipIssues\": [\n    {\n      \"partnerId\": \"P-002\",\n      \"issue\": \"Ownership % drift vs capital ratio\",\n      \"suggestedOwnershipPct\": 40\n    }\n  ]\n}"
+            "url": "{{baseUrl}}/api/proxy/MDM/pipeline",
+            "description": ""
           }
         },
         {
-          "name": "CT-13 produce RPAM→TIM (reverse)",
+          "name": "MDM pipeline ?direction=downstream",
           "request": {
             "method": "GET",
             "header": [
@@ -880,12 +1912,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/RPAM/contracts/ct-13/allocation-needs",
-            "description": "Adjusted tax amount needs\n\nSample:\n{\n  \"contractId\": \"CT-13\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"allocationNeeds\": [\n    {\n      \"bucket\": \"ordinaryIncome\",\n      \"requiredAmount\": 1180000,\n      \"reason\": \"Special allocation SA-12\"\n    }\n  ]\n}"
+            "url": "{{baseUrl}}/api/proxy/MDM/pipeline?direction=downstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-14 produce RPAM→FORMS (downstream)",
+          "name": "MDM pipeline ?direction=upstream",
           "request": {
             "method": "GET",
             "header": [
@@ -894,12 +1926,36 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/RPAM/contracts/ct-14/partner-allocations",
-            "description": "Partner allocation / K-1 data\n\nSample:\n{\n  \"contractId\": \"CT-14\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"partnerAllocations\": [\n    {\n      \"partnerId\": \"P-001\",\n      \"k1\": {\n        \"ordinaryIncome\": 708000,\n        \"interestIncome\": 7200,\n        \"endingCapital\": 658000\n      }\n    },\n    {\n      \"partnerId\": \"P-002\",\n      \"k1\": {\n        \"ordinaryIncome\": 472000,\n        \"interestIncome\": 4800,\n        \"endingCapital\": 401000\n      }\n    }\n  ]\n}"
+            "url": "{{baseUrl}}/api/proxy/MDM/pipeline?direction=upstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-17 consume as RPAM",
+          "name": "MDM POST /upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/MDM/upload",
+            "description": "Direct service upload for MDM",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "MDM downstream → ACC",
           "request": {
             "method": "GET",
             "header": [
@@ -908,17 +1964,59 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/RPAM/consume/CT-17",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/MDM/downstream/ACC",
+            "description": "CT-01: Entities for account mapping"
+          }
+        },
+        {
+          "name": "MDM downstream → TAX",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/MDM/downstream/TAX",
+            "description": "CT-02: Entity tax attributes"
+          }
+        },
+        {
+          "name": "MDM downstream → ALC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/MDM/downstream/ALC",
+            "description": "CT-03: Partner ownership"
+          }
+        },
+        {
+          "name": "MDM downstream → DOC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/MDM/downstream/DOC",
+            "description": "CT-04: Filing metadata"
           }
         }
       ]
     },
     {
-      "name": "Service FORMS — Forms & Print",
+      "name": "Service ACC — Accounting",
       "item": [
         {
-          "name": "FORMS health",
+          "name": "ACC health",
           "request": {
             "method": "GET",
             "header": [
@@ -927,12 +2025,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/FORMS/health",
+            "url": "{{baseUrl}}/api/proxy/ACC/health",
             "description": ""
           }
         },
         {
-          "name": "FORMS contracts catalog",
+          "name": "ACC contracts catalog",
           "request": {
             "method": "GET",
             "header": [
@@ -941,12 +2039,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/FORMS/contracts",
+            "url": "{{baseUrl}}/api/proxy/ACC/contracts",
             "description": ""
           }
         },
         {
-          "name": "FORMS pipeline probe",
+          "name": "ACC flow summary",
           "request": {
             "method": "GET",
             "header": [
@@ -955,12 +2053,26 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/FORMS/pipeline",
+            "url": "{{baseUrl}}/api/proxy/ACC/flow",
+            "description": "Downstream + upstream peers"
+          }
+        },
+        {
+          "name": "ACC contracts/downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ACC/contracts/downstream",
             "description": ""
           }
         },
         {
-          "name": "CT-04 consume as FORMS",
+          "name": "ACC contracts/upstream",
           "request": {
             "method": "GET",
             "header": [
@@ -969,12 +2081,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/FORMS/consume/CT-04",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/ACC/contracts/upstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-11 consume as FORMS",
+          "name": "ACC consume/downstream",
           "request": {
             "method": "GET",
             "header": [
@@ -983,12 +2095,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/FORMS/consume/CT-11",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/ACC/consume/downstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-14 consume as FORMS",
+          "name": "ACC consume/upstream",
           "request": {
             "method": "GET",
             "header": [
@@ -997,12 +2109,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/FORMS/consume/CT-14",
-            "description": "Consumer pull of producer payload"
+            "url": "{{baseUrl}}/api/proxy/ACC/consume/upstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-15 produce FORMS→MAD (reverse)",
+          "name": "ACC pipeline",
           "request": {
             "method": "GET",
             "header": [
@@ -1011,12 +2123,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/FORMS/contracts/ct-15/entity-print-needs",
-            "description": "Legal name / EIN for forms\n\nSample:\n{\n  \"contractId\": \"CT-15\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"printNeeds\": [\n    {\n      \"field\": \"legalName\",\n      \"required\": true\n    },\n    {\n      \"field\": \"ein\",\n      \"required\": true\n    }\n  ]\n}"
+            "url": "{{baseUrl}}/api/proxy/ACC/pipeline",
+            "description": ""
           }
         },
         {
-          "name": "CT-16 produce FORMS→TIM (reverse)",
+          "name": "ACC pipeline ?direction=downstream",
           "request": {
             "method": "GET",
             "header": [
@@ -1025,12 +2137,12 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/FORMS/contracts/ct-16/tax-line-needs",
-            "description": "Tax line amounts for forms\n\nSample:\n{\n  \"contractId\": \"CT-16\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"taxLineNeeds\": [\n    {\n      \"form\": \"1065\",\n      \"line\": \"22\",\n      \"description\": \"Ordinary business income\"\n    }\n  ]\n}"
+            "url": "{{baseUrl}}/api/proxy/ACC/pipeline?direction=downstream",
+            "description": ""
           }
         },
         {
-          "name": "CT-17 produce FORMS→RPAM (reverse)",
+          "name": "ACC pipeline ?direction=upstream",
           "request": {
             "method": "GET",
             "header": [
@@ -1039,8 +2151,721 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/proxy/FORMS/contracts/ct-17/capital-restatement",
-            "description": "Partner capital restatement\n\nSample:\n{\n  \"contractId\": \"CT-17\",\n  \"engagementId\": \"ENG-2025-1065-001\",\n  \"entityId\": \"ENT-ALPHA-LP\",\n  \"capitalRestatement\": [\n    {\n      \"partnerId\": \"P-001\",\n      \"beginning\": 500000,\n      \"ending\": 658000,\n      \"restatementReason\": \"Forms package capital rollforward\"\n    },\n    {\n      \"partnerId\": \"P-002\",\n      \"beginning\": 320000,\n      \"ending\": 401000,\n      \"restatementReason\": \"Forms package capital rollforward\"\n    }\n  ]\n}"
+            "url": "{{baseUrl}}/api/proxy/ACC/pipeline?direction=upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "ACC POST /upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ACC/upload",
+            "description": "Direct service upload for ACC",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ACC upstream → MDM",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ACC/upstream/MDM",
+            "description": "CT-05: Missing entity / account codes"
+          }
+        },
+        {
+          "name": "ACC downstream → TAX",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ACC/downstream/TAX",
+            "description": "CT-06: Book account balances"
+          }
+        },
+        {
+          "name": "ACC downstream → ALC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ACC/downstream/ALC",
+            "description": "CT-07: Capital account mappings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Service TAX — Tax Computation",
+      "item": [
+        {
+          "name": "TAX health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/health",
+            "description": ""
+          }
+        },
+        {
+          "name": "TAX contracts catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/contracts",
+            "description": ""
+          }
+        },
+        {
+          "name": "TAX flow summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/flow",
+            "description": "Downstream + upstream peers"
+          }
+        },
+        {
+          "name": "TAX contracts/downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/contracts/downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "TAX contracts/upstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/contracts/upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "TAX consume/downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/consume/downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "TAX consume/upstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/consume/upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "TAX pipeline",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/pipeline",
+            "description": ""
+          }
+        },
+        {
+          "name": "TAX pipeline ?direction=downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/pipeline?direction=downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "TAX pipeline ?direction=upstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/pipeline?direction=upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "TAX validate",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/validate",
+            "description": ""
+          }
+        },
+        {
+          "name": "TAX calculate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/calculate",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "TAX upstream → MDM",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/upstream/MDM",
+            "description": "CT-08: Tax attribute corrections"
+          }
+        },
+        {
+          "name": "TAX upstream → ACC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/upstream/ACC",
+            "description": "CT-09: Book-to-tax reconciling asks"
+          }
+        },
+        {
+          "name": "TAX downstream → ALC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/downstream/ALC",
+            "description": "CT-10: Taxable income buckets"
+          }
+        },
+        {
+          "name": "TAX downstream → DOC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/TAX/downstream/DOC",
+            "description": "CT-11: Tax computation summary"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Service ALC — Allocations",
+      "item": [
+        {
+          "name": "ALC health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/health",
+            "description": ""
+          }
+        },
+        {
+          "name": "ALC contracts catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/contracts",
+            "description": ""
+          }
+        },
+        {
+          "name": "ALC flow summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/flow",
+            "description": "Downstream + upstream peers"
+          }
+        },
+        {
+          "name": "ALC contracts/downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/contracts/downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "ALC contracts/upstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/contracts/upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "ALC consume/downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/consume/downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "ALC consume/upstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/consume/upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "ALC pipeline",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/pipeline",
+            "description": ""
+          }
+        },
+        {
+          "name": "ALC pipeline ?direction=downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/pipeline?direction=downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "ALC pipeline ?direction=upstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/pipeline?direction=upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "ALC validate",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/validate",
+            "description": ""
+          }
+        },
+        {
+          "name": "ALC allocate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/allocate",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "ALC upstream → MDM",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/upstream/MDM",
+            "description": "CT-12: Ownership validation issues"
+          }
+        },
+        {
+          "name": "ALC upstream → TAX",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/upstream/TAX",
+            "description": "CT-13: Adjusted tax amount needs"
+          }
+        },
+        {
+          "name": "ALC downstream → DOC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/ALC/downstream/DOC",
+            "description": "CT-14: Partner allocation / K-1 data"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Service DOC — Forms & Documents",
+      "item": [
+        {
+          "name": "DOC health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/health",
+            "description": ""
+          }
+        },
+        {
+          "name": "DOC contracts catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/contracts",
+            "description": ""
+          }
+        },
+        {
+          "name": "DOC flow summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/flow",
+            "description": "Downstream + upstream peers"
+          }
+        },
+        {
+          "name": "DOC contracts/downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/contracts/downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "DOC contracts/upstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/contracts/upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "DOC consume/downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/consume/downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "DOC consume/upstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/consume/upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "DOC pipeline",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/pipeline",
+            "description": ""
+          }
+        },
+        {
+          "name": "DOC pipeline ?direction=downstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/pipeline?direction=downstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "DOC pipeline ?direction=upstream",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/pipeline?direction=upstream",
+            "description": ""
+          }
+        },
+        {
+          "name": "DOC upstream → MDM",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/upstream/MDM",
+            "description": "CT-15: Legal name / EIN for forms"
+          }
+        },
+        {
+          "name": "DOC upstream → TAX",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/upstream/TAX",
+            "description": "CT-16: Tax line amounts for forms"
+          }
+        },
+        {
+          "name": "DOC upstream → ALC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proxy/DOC/upstream/ALC",
+            "description": "CT-17: Partner capital restatement"
           }
         }
       ]
