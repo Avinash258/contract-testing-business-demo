@@ -1,0 +1,31 @@
+{
+  "name": "contract-testing-business-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TaxMesh: CEM→MAD→CAM→TIM→RPAM→Forms (6 microservices, CT-00…CT-17, upload-driven Form 1065 demo)",
+  "scripts": {
+    "start": "node scripts/start-all.js",
+    "start:cem": "node services/cem/index.js",
+    "start:mad": "node services/mad/index.js",
+    "start:cam": "node services/cam/index.js",
+    "start:tim": "node services/tim/index.js",
+    "start:rpam": "node services/rpam/index.js",
+    "start:forms": "node services/forms-print/index.js",
+    "start:gateway": "node gateway/index.js",
+    "test:contracts": "node contracts/run-contracts.js",
+    "generate:postman": "node scripts/generate-postman.js",
+    "generate:excel": "node scripts/generate-excel-datasets.js",
+    "generate:guide": "node scripts/generate-guide-docx.js",
+    "generate:openapi": "node -e \"require('fs').writeFileSync('docs/openapi.json', JSON.stringify(require('./shared/openapi').buildOpenApi(), null, 2)); console.log('Wrote docs/openapi.json')\"",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "docx": "^9.14.0",
+    "express": "^4.21.2",
+    "multer": "^2.5.0",
+    "swagger-ui-express": "^5.0.1",
+    "xlsx": "^0.18.5"
+  }
+}

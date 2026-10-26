@@ -1,0 +1,72 @@
+x-env: &service-env
+  URL_CEM: http://cem:4101
+  URL_MAD: http://mad:4102
+  URL_CAM: http://cam:4103
+  URL_TIM: http://tim:4104
+  URL_RPAM: http://rpam:4105
+  URL_FORMS: http://forms-print:4106
+
+services:
+  cem:
+    build: .
+    command: node services/cem/index.js
+    environment:
+      <<: *service-env
+    ports:
+      - "4101:4101"
+
+  mad:
+    build: .
+    command: node services/mad/index.js
+    environment:
+      <<: *service-env
+    ports:
+      - "4102:4102"
+
+  cam:
+    build: .
+    command: node services/cam/index.js
+    environment:
+      <<: *service-env
+    ports:
+      - "4103:4103"
+
+  tim:
+    build: .
+    command: node services/tim/index.js
+    environment:
+      <<: *service-env
+    ports:
+      - "4104:4104"
+
+  rpam:
+    build: .
+    command: node services/rpam/index.js
+    environment:
+      <<: *service-env
+    ports:
+      - "4105:4105"
+
+  forms-print:
+    build: .
+    command: node services/forms-print/index.js
+    environment:
+      <<: *service-env
+    ports:
+      - "4106:4106"
+
+  gateway:
+    build: .
+    command: node gateway/index.js
+    environment:
+      <<: *service-env
+      GATEWAY_PORT: 4100
+    ports:
+      - "4100:4100"
+    depends_on:
+      - cem
+      - mad
+      - cam
+      - tim
+      - rpam
+      - forms-print

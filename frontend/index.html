@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TaxMesh — US Partnership Data Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,700&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="mark">1065</span>
+        <div>
+          <strong>TaxMesh</strong>
+          <small>Partnership data flow</small>
+        </div>
+      </div>
+      <nav class="nav">
+        <button type="button" class="nav-btn active" data-view="flow">Overview</button>
+
+        <p class="nav-label">Modules</p>
+        <button type="button" class="nav-btn module" data-view="module" data-module="CEM">
+          <span class="nav-code">CEM</span> Client Engagement
+        </button>
+        <button type="button" class="nav-btn module" data-view="module" data-module="MAD">
+          <span class="nav-code">MAD</span> Master Data
+        </button>
+        <button type="button" class="nav-btn module" data-view="module" data-module="CAM">
+          <span class="nav-code">CAM</span> Accounting
+        </button>
+        <button type="button" class="nav-btn module" data-view="module" data-module="TIM">
+          <span class="nav-code">TIM</span> Tax Engine
+        </button>
+        <button type="button" class="nav-btn module" data-view="module" data-module="RPAM">
+          <span class="nav-code">RPAM</span> Allocations
+        </button>
+        <button type="button" class="nav-btn module" data-view="module" data-module="FORMS">
+          <span class="nav-code">FORMS</span> Forms Print
+        </button>
+
+        <p class="nav-label">Outputs</p>
+        <button type="button" class="nav-btn" data-view="forms">Form 1065 / K-1</button>
+        <button type="button" class="nav-btn" data-view="docs">API docs</button>
+      </nav>
+      <div class="side-foot">
+        <a href="/api-docs" target="_blank" rel="noopener">Swagger</a>
+        <a href="/download/architecture-guide" download="TaxMesh_API_Architecture_and_Developer_Guide.docx">Guide (.docx)</a>
+        <a href="/docs/APPLICATION_MANUAL.md" target="_blank" rel="noopener">Manual</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="viewEyebrow">Upload → consume → calculate → print</p>
+          <h1 id="viewTitle">Taxation data flow</h1>
+        </div>
+        <div class="top-actions">
+          <span id="healthPill" class="pill">checking…</span>
+          <span id="statusPill" class="pill">draft</span>
+          <button type="button" id="refreshAll" class="btn ghost">Refresh</button>
+        </div>
+      </header>
+
+      <section id="view-flow" class="view active">
+        <div class="eng-banner" id="engBanner"></div>
+
+        <article class="panel">
+          <h2>How data moves</h2>
+          <ol class="flow-rules">
+            <li><strong>Upload CEM + MAD</strong> → engagement &amp; entity data is consumed by <em>CAM</em> and <em>TIM</em>.</li>
+            <li><strong>Upload CAM</strong> → CAM reads CEM + MAD, then pushes books into <em>TIM</em> and <em>RPAM</em>.</li>
+            <li><strong>TIM + RPAM calculate</strong> → results flow into <em>Forms Print</em> (1065 / K-1 package).</li>
+          </ol>
+          <div id="flowNodes" class="flow-nodes"></div>
+          <div id="flowEdges" class="flow-edges"></div>
+        </article>
+
+        <article class="panel upload-panel">
+          <h2>Excel uploads</h2>
+          <p class="hint">Order: CEM → MAD → CAM. CAM upload runs TIM → RPAM → Forms Print.</p>
+          <div class="upload-grid">
+            <div class="upload-card">
+              <strong>1. CEM</strong>
+              <span>Engagement / project / job</span>
+              <input type="file" id="fileCem" accept=".xlsx" />
+              <button type="button" class="btn small" data-upload="cem">Upload CEM</button>
+            </div>
+            <div class="upload-card">
+              <strong>2. MAD</strong>
+              <span>Entity + partners (needs CEM)</span>
+              <input type="file" id="fileMad" accept=".xlsx" />
+              <button type="button" class="btn small" data-upload="mad">Upload MAD</button>
+            </div>
+            <div class="upload-card">
+              <strong>3. CAM</strong>
+              <span>Trial balance → TIM &amp; RPAM → Forms</span>
+              <input type="file" id="fileCam" accept=".xlsx" />
+              <button type="button" class="btn small" data-upload="cam">Upload CAM &amp; process</button>
+            </div>
+          </div>
+          <div class="dataset-row">
+            <label>Demo dataset
+              <select id="datasetSelect"></select>
+            </label>
+            <button type="button" class="btn small" id="btnLoadDataset">Load files</button>
+            <button type="button" class="btn small" id="btnUploadAll">Upload all 3 &amp; process</button>
+            <button type="button" class="btn ghost small" id="btnReset">Reset</button>
+            <a id="dlCem" class="linkish" href="#" download>CEM.xlsx</a>
+            <a id="dlMad" class="linkish" href="#" download>MAD.xlsx</a>
+            <a id="dlCam" class="linkish" href="#" download>CAM.xlsx</a>
+          </div>
+          <pre id="uploadOut" class="code">Upload status / flow result appears here.</pre>
+        </article>
+      </section>
+
+      <!-- Per-module pages -->
+      <section id="view-module" class="view">
+        <div class="eng-banner" id="moduleBanner"></div>
+        <div class="split">
+          <article class="panel">
+            <h2 id="moduleHeading">Module</h2>
+            <p class="hint" id="moduleHint"></p>
+            <div id="moduleBody"></div>
+            <div id="moduleUpload" class="module-upload hidden"></div>
+          </article>
+          <article class="panel">
+            <h2>Health &amp; consumption</h2>
+            <pre id="moduleSide" class="code tall">Select a module.</pre>
+          </article>
+        </div>
+      </section>
+
+      <section id="view-forms" class="view">
+        <div class="split">
+          <article class="panel">
+            <h2>Form 1065 — key lines</h2>
+            <div id="form1065Body" class="muted">Process a CAM upload to populate.</div>
+          </article>
+          <article class="panel">
+            <h2>Schedule K-1 preview</h2>
+            <div id="k1Body" class="muted">RPAM allocations appear here after flow.</div>
+          </article>
+        </div>
+        <article class="panel mt-panel">
+          <h2>Print package</h2>
+          <pre id="packageBody" class="code">No package yet.</pre>
+        </article>
+      </section>
+
+      <section id="view-docs" class="view">
+        <div class="card-grid docs-grid">
+          <a class="doc-card highlight" href="/download/architecture-guide" download="TaxMesh_API_Architecture_and_Developer_Guide.docx">
+            <strong>Architecture guide (Word)</strong>
+            <span>Download TaxMesh API Architecture &amp; Developer Guide (.docx)</span>
+          </a>
+          <a class="doc-card" href="/api-docs" target="_blank" rel="noopener"><strong>Swagger</strong><span>Filing + microservice APIs</span></a>
+          <a class="doc-card" href="/docs/API.md" target="_blank" rel="noopener"><strong>API docs</strong><span>Upload &amp; data-flow endpoints</span></a>
+          <a class="doc-card" href="/docs/APPLICATION_MANUAL.md" target="_blank" rel="noopener"><strong>Manual</strong><span>How to run the filing flow</span></a>
+          <a class="doc-card" href="/docs/TaxMesh_API_Architecture_and_Developer_Guide.md" target="_blank" rel="noopener"><strong>Guide (Markdown)</strong><span>Same content in .md</span></a>
+          <a class="doc-card" href="/testdata/index.json" target="_blank" rel="noopener"><strong>Datasets</strong><span>5 Excel sets index</span></a>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

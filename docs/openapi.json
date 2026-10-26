@@ -1,0 +1,1506 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "TaxMesh — Tax Demo Microservice APIs",
+    "version": "1.0.0",
+    "description": "Partnership tax pipeline demo for the NV AI-driven Contract Testing case study.\n\n**Microservices (separate processes):** CEM · MAD · CAM · TIM · RPAM · Forms Print\n\n**Contracts:** CT-00 … CT-17\n\nGateway proxies under `/api/proxy/{CEM|MAD|CAM|TIM|RPAM|FORMS}/...`.\nExcel uploads are owned by CEM / MAD / CAM microservices (`POST /upload`).",
+    "contact": {
+      "name": "TaxMesh Demo"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:4100",
+      "description": "Local gateway"
+    },
+    {
+      "url": "http://localhost:4100",
+      "description": "Localhost alias"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Gateway",
+      "description": "Aggregation & catalog APIs"
+    },
+    {
+      "name": "Filing — Form 1065",
+      "description": "US partnership filing journey: CEM → MAD → CAM → TIM → RPAM → ERE/Forms Print → MeF (case study)"
+    },
+    {
+      "name": "Contracts CT-01…CT-17",
+      "description": "Producer contract payloads"
+    },
+    {
+      "name": "Service CEM — Client Engagement",
+      "description": "CEM · Engagement, project, entity group & job context · port 4101"
+    },
+    {
+      "name": "Service MAD — Master Data",
+      "description": "MAD · Legal entities, ownership, SALT & contacts · port 4102"
+    },
+    {
+      "name": "Service CAM — Accounting",
+      "description": "CAM · Chart of accounts, mappings & adjustments · port 4103"
+    },
+    {
+      "name": "Service TIM — Tax Engine",
+      "description": "TIM · Forms import, federal / state recalculation · port 4104"
+    },
+    {
+      "name": "Service RPAM — Allocations",
+      "description": "RPAM · Partner capital, allocate & tier · port 4105"
+    },
+    {
+      "name": "Service FORMS — Forms & Print",
+      "description": "Forms Print · Reporting sync & final print package · port 4106"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Gateway"
+        ],
+        "summary": "Gateway + all service health",
+        "operationId": "getGatewayHealth",
+        "responses": {
+          "200": {
+            "description": "Health snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/architecture": {
+      "get": {
+        "tags": [
+          "Gateway"
+        ],
+        "summary": "Architecture catalog (services, contracts, matrix)",
+        "operationId": "getArchitecture",
+        "responses": {
+          "200": {
+            "description": "Architecture document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contracts/{id}": {
+      "get": {
+        "tags": [
+          "Gateway"
+        ],
+        "summary": "Contract metadata + sample payload",
+        "operationId": "getContractById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CT-01"
+            },
+            "description": "Contract id CT-01 … CT-17"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contract detail"
+          },
+          "404": {
+            "description": "Unknown contract"
+          }
+        }
+      }
+    },
+    "/api/filing": {
+      "get": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Engagement filing snapshot (CEM→Forms journey)",
+        "operationId": "getFiling",
+        "responses": {
+          "200": {
+            "description": "Full engagement + steps + gates"
+          }
+        }
+      }
+    },
+    "/api/filing/reset": {
+      "post": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Reset demo engagement to draft",
+        "operationId": "resetFiling",
+        "responses": {
+          "200": {
+            "description": "Fresh snapshot"
+          }
+        }
+      }
+    },
+    "/api/filing/run/{stepId}": {
+      "post": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Run one filing stage (cem|setup|books|tax|allocate|forms|efile)",
+        "operationId": "runFilingStep",
+        "parameters": [
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cem",
+                "setup",
+                "books",
+                "tax",
+                "allocate",
+                "forms",
+                "efile"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated snapshot"
+          },
+          "400": {
+            "description": "Business rule / sequencing error"
+          }
+        }
+      }
+    },
+    "/api/filing/run-all": {
+      "post": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Run full CEM→MAD→CAM→TIM→RPAM→Forms→MeF journey",
+        "operationId": "runFilingAll",
+        "responses": {
+          "200": {
+            "description": "Completed engagement snapshot"
+          }
+        }
+      }
+    },
+    "/api/filing/form1065": {
+      "get": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Form 1065 lines, K-1s, package & e-file artifacts",
+        "operationId": "getForm1065",
+        "responses": {
+          "200": {
+            "description": "Return artifacts"
+          }
+        }
+      }
+    },
+    "/api/filing/gates": {
+      "get": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "API quality gates AQG1–AQG5",
+        "operationId": "getQualityGates",
+        "responses": {
+          "200": {
+            "description": "Gate statuses"
+          }
+        }
+      }
+    },
+    "/api/filing/jobs": {
+      "get": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Async import / recalc / print jobs",
+        "operationId": "getFilingJobs",
+        "responses": {
+          "200": {
+            "description": "Job history"
+          }
+        }
+      }
+    },
+    "/api/filing/datasets": {
+      "get": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "List 5 demo CEM/MAD/CAM Excel datasets",
+        "operationId": "listExcelDatasets",
+        "responses": {
+          "200": {
+            "description": "Dataset index"
+          }
+        }
+      }
+    },
+    "/api/filing/upload/cem": {
+      "post": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Upload CEM engagement Excel (.xlsx)",
+        "operationId": "uploadCemExcel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Imported CEM context"
+          },
+          "400": {
+            "description": "Parse/validation error"
+          }
+        }
+      }
+    },
+    "/api/filing/upload/mad": {
+      "post": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Upload MAD master-data Excel (.xlsx)",
+        "operationId": "uploadMadExcel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Imported entity + partners"
+          },
+          "400": {
+            "description": "Parse/validation error"
+          }
+        }
+      }
+    },
+    "/api/filing/upload/cam": {
+      "post": {
+        "tags": [
+          "Filing — Form 1065"
+        ],
+        "summary": "Upload CAM trial-balance Excel (.xlsx)",
+        "operationId": "uploadCamExcel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Imported trial balance"
+          },
+          "400": {
+            "description": "Parse/validation error"
+          }
+        }
+      }
+    },
+    "/api/proxy/CEM/health": {
+      "get": {
+        "tags": [
+          "Service CEM — Client Engagement"
+        ],
+        "summary": "Client Engagement health",
+        "operationId": "health_CEM",
+        "responses": {
+          "200": {
+            "description": "Service health"
+          }
+        }
+      }
+    },
+    "/api/proxy/CEM/contracts": {
+      "get": {
+        "tags": [
+          "Service CEM — Client Engagement"
+        ],
+        "summary": "Contracts produced/consumed by Client Engagement",
+        "operationId": "contracts_CEM",
+        "responses": {
+          "200": {
+            "description": "Contract lists"
+          }
+        }
+      }
+    },
+    "/api/proxy/CEM/pipeline": {
+      "get": {
+        "tags": [
+          "Service CEM — Client Engagement"
+        ],
+        "summary": "Probe all contracts consumed by Client Engagement",
+        "operationId": "pipeline_CEM",
+        "responses": {
+          "200": {
+            "description": "Consumed contract reachability"
+          }
+        }
+      }
+    },
+    "/api/proxy/CEM/consume/{contractId}": {
+      "get": {
+        "tags": [
+          "Service CEM — Client Engagement"
+        ],
+        "summary": "Pull a producer payload consumed by Client Engagement",
+        "operationId": "consume_CEM",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CT-01"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consumed payload wrapper"
+          },
+          "404": {
+            "description": "Not a consumer of this contract"
+          },
+          "502": {
+            "description": "Producer unreachable"
+          }
+        }
+      }
+    },
+    "/api/proxy/MAD/health": {
+      "get": {
+        "tags": [
+          "Service MAD — Master Data"
+        ],
+        "summary": "Master Data health",
+        "operationId": "health_MAD",
+        "responses": {
+          "200": {
+            "description": "Service health"
+          }
+        }
+      }
+    },
+    "/api/proxy/MAD/contracts": {
+      "get": {
+        "tags": [
+          "Service MAD — Master Data"
+        ],
+        "summary": "Contracts produced/consumed by Master Data",
+        "operationId": "contracts_MAD",
+        "responses": {
+          "200": {
+            "description": "Contract lists"
+          }
+        }
+      }
+    },
+    "/api/proxy/MAD/pipeline": {
+      "get": {
+        "tags": [
+          "Service MAD — Master Data"
+        ],
+        "summary": "Probe all contracts consumed by Master Data",
+        "operationId": "pipeline_MAD",
+        "responses": {
+          "200": {
+            "description": "Consumed contract reachability"
+          }
+        }
+      }
+    },
+    "/api/proxy/MAD/consume/{contractId}": {
+      "get": {
+        "tags": [
+          "Service MAD — Master Data"
+        ],
+        "summary": "Pull a producer payload consumed by Master Data",
+        "operationId": "consume_MAD",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CT-01"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consumed payload wrapper"
+          },
+          "404": {
+            "description": "Not a consumer of this contract"
+          },
+          "502": {
+            "description": "Producer unreachable"
+          }
+        }
+      }
+    },
+    "/api/proxy/CAM/health": {
+      "get": {
+        "tags": [
+          "Service CAM — Accounting"
+        ],
+        "summary": "Accounting health",
+        "operationId": "health_CAM",
+        "responses": {
+          "200": {
+            "description": "Service health"
+          }
+        }
+      }
+    },
+    "/api/proxy/CAM/contracts": {
+      "get": {
+        "tags": [
+          "Service CAM — Accounting"
+        ],
+        "summary": "Contracts produced/consumed by Accounting",
+        "operationId": "contracts_CAM",
+        "responses": {
+          "200": {
+            "description": "Contract lists"
+          }
+        }
+      }
+    },
+    "/api/proxy/CAM/pipeline": {
+      "get": {
+        "tags": [
+          "Service CAM — Accounting"
+        ],
+        "summary": "Probe all contracts consumed by Accounting",
+        "operationId": "pipeline_CAM",
+        "responses": {
+          "200": {
+            "description": "Consumed contract reachability"
+          }
+        }
+      }
+    },
+    "/api/proxy/CAM/consume/{contractId}": {
+      "get": {
+        "tags": [
+          "Service CAM — Accounting"
+        ],
+        "summary": "Pull a producer payload consumed by Accounting",
+        "operationId": "consume_CAM",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CT-01"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consumed payload wrapper"
+          },
+          "404": {
+            "description": "Not a consumer of this contract"
+          },
+          "502": {
+            "description": "Producer unreachable"
+          }
+        }
+      }
+    },
+    "/api/proxy/TIM/health": {
+      "get": {
+        "tags": [
+          "Service TIM — Tax Engine"
+        ],
+        "summary": "Tax Engine health",
+        "operationId": "health_TIM",
+        "responses": {
+          "200": {
+            "description": "Service health"
+          }
+        }
+      }
+    },
+    "/api/proxy/TIM/contracts": {
+      "get": {
+        "tags": [
+          "Service TIM — Tax Engine"
+        ],
+        "summary": "Contracts produced/consumed by Tax Engine",
+        "operationId": "contracts_TIM",
+        "responses": {
+          "200": {
+            "description": "Contract lists"
+          }
+        }
+      }
+    },
+    "/api/proxy/TIM/pipeline": {
+      "get": {
+        "tags": [
+          "Service TIM — Tax Engine"
+        ],
+        "summary": "Probe all contracts consumed by Tax Engine",
+        "operationId": "pipeline_TIM",
+        "responses": {
+          "200": {
+            "description": "Consumed contract reachability"
+          }
+        }
+      }
+    },
+    "/api/proxy/TIM/consume/{contractId}": {
+      "get": {
+        "tags": [
+          "Service TIM — Tax Engine"
+        ],
+        "summary": "Pull a producer payload consumed by Tax Engine",
+        "operationId": "consume_TIM",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CT-01"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consumed payload wrapper"
+          },
+          "404": {
+            "description": "Not a consumer of this contract"
+          },
+          "502": {
+            "description": "Producer unreachable"
+          }
+        }
+      }
+    },
+    "/api/proxy/RPAM/health": {
+      "get": {
+        "tags": [
+          "Service RPAM — Allocations"
+        ],
+        "summary": "Allocations health",
+        "operationId": "health_RPAM",
+        "responses": {
+          "200": {
+            "description": "Service health"
+          }
+        }
+      }
+    },
+    "/api/proxy/RPAM/contracts": {
+      "get": {
+        "tags": [
+          "Service RPAM — Allocations"
+        ],
+        "summary": "Contracts produced/consumed by Allocations",
+        "operationId": "contracts_RPAM",
+        "responses": {
+          "200": {
+            "description": "Contract lists"
+          }
+        }
+      }
+    },
+    "/api/proxy/RPAM/pipeline": {
+      "get": {
+        "tags": [
+          "Service RPAM — Allocations"
+        ],
+        "summary": "Probe all contracts consumed by Allocations",
+        "operationId": "pipeline_RPAM",
+        "responses": {
+          "200": {
+            "description": "Consumed contract reachability"
+          }
+        }
+      }
+    },
+    "/api/proxy/RPAM/consume/{contractId}": {
+      "get": {
+        "tags": [
+          "Service RPAM — Allocations"
+        ],
+        "summary": "Pull a producer payload consumed by Allocations",
+        "operationId": "consume_RPAM",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CT-01"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consumed payload wrapper"
+          },
+          "404": {
+            "description": "Not a consumer of this contract"
+          },
+          "502": {
+            "description": "Producer unreachable"
+          }
+        }
+      }
+    },
+    "/api/proxy/FORMS/health": {
+      "get": {
+        "tags": [
+          "Service FORMS — Forms & Print"
+        ],
+        "summary": "Forms & Print health",
+        "operationId": "health_FORMS",
+        "responses": {
+          "200": {
+            "description": "Service health"
+          }
+        }
+      }
+    },
+    "/api/proxy/FORMS/contracts": {
+      "get": {
+        "tags": [
+          "Service FORMS — Forms & Print"
+        ],
+        "summary": "Contracts produced/consumed by Forms & Print",
+        "operationId": "contracts_FORMS",
+        "responses": {
+          "200": {
+            "description": "Contract lists"
+          }
+        }
+      }
+    },
+    "/api/proxy/FORMS/pipeline": {
+      "get": {
+        "tags": [
+          "Service FORMS — Forms & Print"
+        ],
+        "summary": "Probe all contracts consumed by Forms & Print",
+        "operationId": "pipeline_FORMS",
+        "responses": {
+          "200": {
+            "description": "Consumed contract reachability"
+          }
+        }
+      }
+    },
+    "/api/proxy/FORMS/consume/{contractId}": {
+      "get": {
+        "tags": [
+          "Service FORMS — Forms & Print"
+        ],
+        "summary": "Pull a producer payload consumed by Forms & Print",
+        "operationId": "consume_FORMS",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CT-01"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consumed payload wrapper"
+          },
+          "404": {
+            "description": "Not a consumer of this contract"
+          },
+          "502": {
+            "description": "Producer unreachable"
+          }
+        }
+      }
+    },
+    "/api/proxy/CEM/contracts/ct-00/engagement-context": {
+      "get": {
+        "tags": [
+          "Service CEM — Client Engagement",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-00: Engagement / project / job context",
+        "description": "**downstream** contract · Producer **CEM** → Consumer **MAD**",
+        "operationId": "CT_00",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-00",
+                  "engagementId": "ENG-2025-1065-001",
+                  "clientId": "CLI-NV-TAX-01",
+                  "projectId": "PRJ-ALPHA-1065-2025",
+                  "entityGroupId": "EG-ALPHA",
+                  "jobId": "JOB-TY2025-001",
+                  "taxYear": 2025,
+                  "formType": "1065",
+                  "dueDate": "2026-03-15"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/MAD/contracts/ct-01/entities": {
+      "get": {
+        "tags": [
+          "Service MAD — Master Data",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-01: Entities for account mapping",
+        "description": "**downstream** contract · Producer **MAD** → Consumer **CAM**",
+        "operationId": "CT_01",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-01",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entities": [
+                    {
+                      "entityId": "ENT-ALPHA-LP",
+                      "legalName": "Alpha Partners LP",
+                      "ein": "12-3456789",
+                      "entityType": "partnership",
+                      "taxYear": 2025
+                    },
+                    {
+                      "entityId": "ENT-BETA-LLC",
+                      "legalName": "Beta Holdings LLC",
+                      "ein": "98-7654321",
+                      "entityType": "disregarded",
+                      "taxYear": 2025
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/MAD/contracts/ct-02/tax-attributes": {
+      "get": {
+        "tags": [
+          "Service MAD — Master Data",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-02: Entity tax attributes",
+        "description": "**downstream** contract · Producer **MAD** → Consumer **TIM**",
+        "operationId": "CT_02",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-02",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "taxAttributes": {
+                    "filingType": "1065",
+                    "fiscalYearEnd": "12-31",
+                    "multiState": true,
+                    "states": [
+                      "NY",
+                      "CA"
+                    ],
+                    "section754Election": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/MAD/contracts/ct-03/ownership": {
+      "get": {
+        "tags": [
+          "Service MAD — Master Data",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-03: Partner ownership",
+        "description": "**downstream** contract · Producer **MAD** → Consumer **RPAM**",
+        "operationId": "CT_03",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-03",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "partners": [
+                    {
+                      "partnerId": "P-001",
+                      "name": "Jordan Lee",
+                      "ownershipPct": 60,
+                      "capitalAccount": "CA-001"
+                    },
+                    {
+                      "partnerId": "P-002",
+                      "name": "Sam Rivera",
+                      "ownershipPct": 40,
+                      "capitalAccount": "CA-002"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/MAD/contracts/ct-04/filing-meta": {
+      "get": {
+        "tags": [
+          "Service MAD — Master Data",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-04: Filing metadata",
+        "description": "**downstream** contract · Producer **MAD** → Consumer **FORMS**",
+        "operationId": "CT_04",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-04",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "filingMeta": {
+                    "formSet": [
+                      "1065",
+                      "K-1",
+                      "K-3"
+                    ],
+                    "jurisdiction": "US-FED",
+                    "printPackageId": null,
+                    "dueDate": "2026-03-15"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/CAM/contracts/ct-05/mapping-gaps": {
+      "get": {
+        "tags": [
+          "Service CAM — Accounting",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-05: Missing entity / account codes",
+        "description": "**reverse** contract · Producer **CAM** → Consumer **MAD**",
+        "operationId": "CT_05",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-05",
+                  "engagementId": "ENG-2025-1065-001",
+                  "gaps": [
+                    {
+                      "code": "MISSING_ENTITY",
+                      "accountCode": "1700",
+                      "message": "No master entity for intercompany account 1700"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/CAM/contracts/ct-06/book-balances": {
+      "get": {
+        "tags": [
+          "Service CAM — Accounting",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-06: Book account balances",
+        "description": "**downstream** contract · Producer **CAM** → Consumer **TIM**",
+        "operationId": "CT_06",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-06",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "bookBalances": [
+                    {
+                      "accountCode": "4000",
+                      "accountName": "Ordinary Income",
+                      "bookAmount": 1250000,
+                      "currency": "USD"
+                    },
+                    {
+                      "accountCode": "5000",
+                      "accountName": "Guaranteed Payments",
+                      "bookAmount": 80000,
+                      "currency": "USD"
+                    },
+                    {
+                      "accountCode": "1700",
+                      "accountName": "Depreciation",
+                      "bookAmount": -45000,
+                      "currency": "USD"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/CAM/contracts/ct-07/capital-map": {
+      "get": {
+        "tags": [
+          "Service CAM — Accounting",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-07: Capital account mappings",
+        "description": "**downstream** contract · Producer **CAM** → Consumer **RPAM**",
+        "operationId": "CT_07",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-07",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "capitalMap": [
+                    {
+                      "partnerId": "P-001",
+                      "capitalAccount": "CA-001",
+                      "beginningCapital": 500000,
+                      "contributions": 0,
+                      "distributions": 50000
+                    },
+                    {
+                      "partnerId": "P-002",
+                      "capitalAccount": "CA-002",
+                      "beginningCapital": 320000,
+                      "contributions": 25000,
+                      "distributions": 20000
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/TIM/contracts/ct-08/attribute-gaps": {
+      "get": {
+        "tags": [
+          "Service TIM — Tax Engine",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-08: Tax attribute corrections",
+        "description": "**reverse** contract · Producer **TIM** → Consumer **MAD**",
+        "operationId": "CT_08",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-08",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "attributeGaps": [
+                    {
+                      "field": "section754Election",
+                      "severity": "warning",
+                      "message": "Confirm 754 election status for tax year"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/TIM/contracts/ct-09/btt-asks": {
+      "get": {
+        "tags": [
+          "Service TIM — Tax Engine",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-09: Book-to-tax reconciling asks",
+        "description": "**reverse** contract · Producer **TIM** → Consumer **CAM**",
+        "operationId": "CT_09",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-09",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "bttAsks": [
+                    {
+                      "accountCode": "1700",
+                      "ask": "Provide tax depreciation schedule for book-to-tax",
+                      "priority": "high"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/TIM/contracts/ct-10/taxable-income": {
+      "get": {
+        "tags": [
+          "Service TIM — Tax Engine",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-10: Taxable income buckets",
+        "description": "**downstream** contract · Producer **TIM** → Consumer **RPAM**",
+        "operationId": "CT_10",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-10",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "taxableIncome": {
+                    "ordinaryIncome": 1180000,
+                    "interestIncome": 12000,
+                    "guaranteedPayments": 80000,
+                    "section179": 15000,
+                    "currency": "USD"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/TIM/contracts/ct-11/tax-summary": {
+      "get": {
+        "tags": [
+          "Service TIM — Tax Engine",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-11: Tax computation summary",
+        "description": "**downstream** contract · Producer **TIM** → Consumer **FORMS**",
+        "operationId": "CT_11",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-11",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "taxSummary": {
+                    "federalTaxableIncome": 1197000,
+                    "stateApportionment": {
+                      "NY": 0.62,
+                      "CA": 0.38
+                    },
+                    "status": "computed",
+                    "version": "TIM-2025.1"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/RPAM/contracts/ct-12/ownership-issues": {
+      "get": {
+        "tags": [
+          "Service RPAM — Allocations",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-12: Ownership validation issues",
+        "description": "**reverse** contract · Producer **RPAM** → Consumer **MAD**",
+        "operationId": "CT_12",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-12",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "ownershipIssues": [
+                    {
+                      "partnerId": "P-002",
+                      "issue": "Ownership % drift vs capital ratio",
+                      "suggestedOwnershipPct": 40
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/RPAM/contracts/ct-13/allocation-needs": {
+      "get": {
+        "tags": [
+          "Service RPAM — Allocations",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-13: Adjusted tax amount needs",
+        "description": "**reverse** contract · Producer **RPAM** → Consumer **TIM**",
+        "operationId": "CT_13",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-13",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "allocationNeeds": [
+                    {
+                      "bucket": "ordinaryIncome",
+                      "requiredAmount": 1180000,
+                      "reason": "Special allocation SA-12"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/RPAM/contracts/ct-14/partner-allocations": {
+      "get": {
+        "tags": [
+          "Service RPAM — Allocations",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-14: Partner allocation / K-1 data",
+        "description": "**downstream** contract · Producer **RPAM** → Consumer **FORMS**",
+        "operationId": "CT_14",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-14",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "partnerAllocations": [
+                    {
+                      "partnerId": "P-001",
+                      "k1": {
+                        "ordinaryIncome": 708000,
+                        "interestIncome": 7200,
+                        "endingCapital": 658000
+                      }
+                    },
+                    {
+                      "partnerId": "P-002",
+                      "k1": {
+                        "ordinaryIncome": 472000,
+                        "interestIncome": 4800,
+                        "endingCapital": 401000
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/FORMS/contracts/ct-15/entity-print-needs": {
+      "get": {
+        "tags": [
+          "Service FORMS — Forms & Print",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-15: Legal name / EIN for forms",
+        "description": "**reverse** contract · Producer **FORMS** → Consumer **MAD**",
+        "operationId": "CT_15",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-15",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "printNeeds": [
+                    {
+                      "field": "legalName",
+                      "required": true
+                    },
+                    {
+                      "field": "ein",
+                      "required": true
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/FORMS/contracts/ct-16/tax-line-needs": {
+      "get": {
+        "tags": [
+          "Service FORMS — Forms & Print",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-16: Tax line amounts for forms",
+        "description": "**reverse** contract · Producer **FORMS** → Consumer **TIM**",
+        "operationId": "CT_16",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-16",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "taxLineNeeds": [
+                    {
+                      "form": "1065",
+                      "line": "22",
+                      "description": "Ordinary business income"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proxy/FORMS/contracts/ct-17/capital-restatement": {
+      "get": {
+        "tags": [
+          "Service FORMS — Forms & Print",
+          "Contracts CT-01…CT-17"
+        ],
+        "summary": "CT-17: Partner capital restatement",
+        "description": "**reverse** contract · Producer **FORMS** → Consumer **RPAM**",
+        "operationId": "CT_17",
+        "responses": {
+          "200": {
+            "description": "Contract payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "contractId": "CT-17",
+                  "engagementId": "ENG-2025-1065-001",
+                  "entityId": "ENT-ALPHA-LP",
+                  "capitalRestatement": [
+                    {
+                      "partnerId": "P-001",
+                      "beginning": 500000,
+                      "ending": 658000,
+                      "restatementReason": "Forms package capital rollforward"
+                    },
+                    {
+                      "partnerId": "P-002",
+                      "beginning": 320000,
+                      "ending": 401000,
+                      "restatementReason": "Forms package capital rollforward"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
