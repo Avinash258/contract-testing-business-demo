@@ -1772,56 +1772,6 @@
           }
         },
         {
-          "name": "CLM v2 engagement",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CLM/v2/engagement",
-            "description": ""
-          }
-        },
-        {
-          "name": "CLM v2 status",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CLM/v2/status",
-            "description": ""
-          }
-        },
-        {
-          "name": "CLM v2 patch engagement",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/CLM/v2/engagement",
-            "description": "Update entityName / taxYear / etc.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"entityName\": \"Alpha Partners LP\",\n  \"taxYear\": 2025\n}"
-            }
-          }
-        },
-        {
           "name": "CLM downstream → MDM",
           "request": {
             "method": "GET",
@@ -2002,62 +1952,6 @@
                 }
               ]
             }
-          }
-        },
-        {
-          "name": "MDM v2 entity",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MDM/v2/entity",
-            "description": ""
-          }
-        },
-        {
-          "name": "MDM v2 partners",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MDM/v2/partners",
-            "description": ""
-          }
-        },
-        {
-          "name": "MDM v2 ownership",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MDM/v2/ownership",
-            "description": ""
-          }
-        },
-        {
-          "name": "MDM v2 status",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/proxy/MDM/v2/status",
-            "description": ""
           }
         },
         {

@@ -25,49 +25,16 @@ Letter aliases: **A=MDM · B=ACC · C=TAX · D=ALC · E=DOC**
 
 ## Release notes
 
-### v2 — branch `v2` (current)
+### `main` (baseline — no `/v2/*` APIs)
 
-**Focus:** richer **CLM** (Client Management) and **MDM** / MAD (Master Data) APIs, documented in Swagger and Postman.
-
-#### Added
-
-| Area | Change |
-|------|--------|
-| **CLM v2 APIs** | `GET /v2/engagement`, `GET /v2/status`, `PATCH /v2/engagement` |
-| **MDM v2 APIs** | `GET /v2/entity`, `GET /v2/partners`, `GET /v2/ownership`, `GET /v2/status` |
-| **Implementation** | New module `shared/serviceV2Apis.js`, wired from `shared/createService.js` |
-| **Swagger / OpenAPI** | Tag **API v2**; paths under `/api/proxy/CLM/v2/*` and `/api/proxy/MDM/v2/*` |
-| **Postman** | Collection regenerated with CLM/MDM v2 requests (`npm run generate:postman`) |
-| **Docs** | This README updated with v2 endpoint list |
-
-#### Behavior notes
-
-- Responses include `"apiVersion": 2`.
-- `PATCH /v2/engagement` can update `entityName`, `taxYear`, `dueDate`, `formType`, `jurisdiction`, `states` after a CLM Excel upload.
-- `GET /v2/ownership` returns ownership totals and whether they equal **100%**.
-- Gateway proxy works the same: `/api/proxy/CLM/v2/...` and `/api/proxy/MDM/v2/...` (legacy `/api/proxy/CEM/...` and `/api/proxy/MAD/...` still resolve to CLM/MDM).
-- v1 routes (`/health`, `/contracts`, `/upload`, CT produce/consume, flow APIs) are **unchanged**.
-
-#### Try it
-
-```http
-GET   http://127.0.0.1:4100/api/proxy/CLM/v2/status
-GET   http://127.0.0.1:4100/api/proxy/CLM/v2/engagement
-PATCH http://127.0.0.1:4100/api/proxy/CLM/v2/engagement
-GET   http://127.0.0.1:4100/api/proxy/MDM/v2/entity
-GET   http://127.0.0.1:4100/api/proxy/MDM/v2/partners
-GET   http://127.0.0.1:4100/api/proxy/MDM/v2/ownership
-GET   http://127.0.0.1:4100/api/proxy/MDM/v2/status
-```
-
-Swagger: http://127.0.0.1:4100/api-docs → filter tag **API v2**.
+CLM/MDM **v2** endpoints (`/v2/engagement`, `/v2/entity`, …) are **not** on `main`. Use branch **`v2`**:
 
 ```bash
 git checkout v2
 npm start
 ```
 
-### Earlier on `main` (baseline)
+On `main`:
 
 - Workspace codes remapped: **CEM→CLM, MAD→MDM, CAM→ACC, TIM→TAX, RPAM→ALC, FORMS→DOC** (legacy aliases kept).
 - Testdata files renamed to `clm.xlsx` / `mdm.xlsx` / `acc.xlsx`.
@@ -141,7 +108,7 @@ GET  /api/filing/validate/alc
 POST /api/filing/alc/allocate
 ```
 
-Legacy upload paths `/upload/cem|mad|cam` still map to CLM/MDM/ACC. See **Release notes → v2** for CLM/MDM `/v2/*` APIs.
+Legacy upload paths `/upload/cem|mad|cam` still map to CLM/MDM/ACC. CLM/MDM `/v2/*` APIs are on branch **`v2`** only.
 
 ## Docs
 
