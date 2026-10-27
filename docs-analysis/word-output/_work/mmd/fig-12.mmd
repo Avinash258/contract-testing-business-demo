@@ -1,0 +1,29 @@
+classDiagram
+  class createService {
+    +createService(serviceId)
+    +GET /health
+    +GET /contracts
+    +GET ct.path
+    +GET /consume/:id
+  }
+  class CONTRACTS {
+    +id producer consumer direction path title
+  }
+  class PAYLOADS {
+    +CT-00..CT-17 sample bodies
+    +requiredKeys(id)
+  }
+  class run_contracts {
+    +check(ct)
+    +main()
+  }
+  class filingEngine {
+    +snapshot()
+    +runTax()
+    +upload handlers via routes
+  }
+  createService --> CONTRACTS
+  createService --> PAYLOADS
+  run_contracts --> CONTRACTS
+  run_contracts --> PAYLOADS
+  filingEngine --> PAYLOADS

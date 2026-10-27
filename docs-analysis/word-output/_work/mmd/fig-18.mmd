@@ -1,0 +1,11 @@
+flowchart TD
+  A[urlFor producer path] --> B[fetch]
+  B --> C{res.ok}
+  C -->|no| F[throw HTTP status]
+  C -->|yes| D[JSON body]
+  D --> E{contractId match}
+  E -->|no| F2[throw]
+  E -->|yes| G[for each requiredKeys]
+  G --> H{key in body}
+  H -->|no| F3[throw missing key]
+  H -->|yes| I[PASS object]

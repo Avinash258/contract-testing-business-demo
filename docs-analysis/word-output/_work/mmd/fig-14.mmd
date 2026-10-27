@@ -1,0 +1,23 @@
+sequenceDiagram
+  participant Author as Developer (git)
+  participant Cat as contracts.js + payloads.js
+  participant Start as start-all.js
+  participant Prod as Producer e.g. MDM
+  participant Cons as Consumer e.g. TAX
+  participant Run as run-contracts.js
+  participant Broker as Pact Broker
+  participant CI as CI/CD gate
+
+  Author->>Cat: Define CT-02 producer/consumer/path + PAYLOADS
+  Note over Cat: Contract "generated"/stored in source
+  Author->>Start: npm start (described only)
+  Start->>Prod: listen :4102
+  Start->>Cons: listen :4104
+  Prod->>Prod: GET /contracts/ct-02/tax-attributes returns PAYLOADS
+  Cons->>Prod: GET /consume/CT-02 (optional runtime pull)
+  Author->>Run: npm run test:contracts (described only)
+  Run->>Prod: fetch urlFor(MDM, path)
+  Run->>Run: assert contractId + requiredKeys
+  Run-->>Author: PASS or FAIL + exit code
+  Broker-->>Author: Not found in repo
+  CI-->>Author: Not found in repo

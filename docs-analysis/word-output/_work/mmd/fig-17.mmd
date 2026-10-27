@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant UI as frontend/app.js
+  participant GW as filingRoutes.js
+  participant FE as filingEngine.js
+  participant Store as filingStore.js
+
+  UI->>GW: POST /api/filing/upload/clm
+  GW->>FE: parse Excel → store
+  UI->>GW: POST /api/filing/upload/mdm
+  UI->>GW: POST /api/filing/upload/acc
+  Note over FE: ACC upload may auto TAX→ALC→DOC
+  UI->>GW: GET /api/filing/validate/tax
+  UI->>GW: POST /api/filing/tax/calculate
+  UI->>GW: POST /api/filing/alc/allocate
+  FE->>Store: persist engagement.json
+  FE-->>UI: snapshot with gates AQG1–AQG5

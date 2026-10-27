@@ -1,0 +1,9 @@
+flowchart LR
+  U1[Upload clm.xlsx] --> CLM
+  U2[Upload mdm.xlsx] --> MDM
+  U3[Upload acc.xlsx] --> ACC
+  CLM --> TAX
+  MDM --> TAX
+  ACC --> TAX
+  TAX --> ALC
+  ALC --> DOC

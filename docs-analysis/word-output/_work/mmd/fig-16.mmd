@@ -1,0 +1,9 @@
+﻿flowchart TD
+  A[Developer edits createService response or PAYLOADS inconsistently] --> B[MDM still up]
+  B --> C[run-contracts check CT-02]
+  C --> D{contractId match?}
+  D -->|no| F1[FAIL: Expected contractId CT-02, got ...]
+  D -->|yes| E{taxAttributes in body?}
+  E -->|no| F2[FAIL: CT-02 missing key taxAttributes]
+  F1 --> X[failed++ ; exit 1]
+  F2 --> X

@@ -1,0 +1,7 @@
+flowchart TD
+  A[Services up] --> B[Runner fetch CT-00…CT-17]
+  B --> C{HTTP 200?}
+  C -->|yes| D{body.contractId === ct.id?}
+  D -->|yes| E{every requiredKeys present?}
+  E -->|yes| F[PASS line logged]
+  F --> G[exit 0]

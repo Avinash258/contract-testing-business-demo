@@ -1,0 +1,45 @@
+flowchart TB
+  subgraph Presentation["Presentation"]
+    UI["frontend/*"]
+  end
+  subgraph Edge["Edge"]
+    GW["gateway/index.js"]
+    FR["gateway/filingRoutes.js"]
+  end
+  subgraph Domain["Domain services"]
+    S["services/*/index.js"]
+    CS["shared/createService.js"]
+  end
+  subgraph ContractStore["Contract storage (in-repo JS)"]
+    CAT["shared/contracts.js CONTRACTS"]
+    PAY["shared/payloads.js PAYLOADS"]
+  end
+  subgraph Verify["Verification"]
+    RUN["contracts/run-contracts.js"]
+  end
+  subgraph Data["Demo data"]
+    XLS["testdata/set-0N/*.xlsx"]
+    STORE["shared/filingStore.js → data/engagement.json"]
+  end
+  subgraph Ops["Ops"]
+    DC["docker-compose.yml"]
+    SA["scripts/start-all.js"]
+  end
+  UI --> GW
+  GW --> FR
+  GW --> S
+  S --> CS
+  CS --> CAT
+  CS --> PAY
+  RUN --> CAT
+  RUN --> PAY
+  RUN -->|HTTP GET producer paths| S
+  FR --> STORE
+  FR --> XLS
+  SA --> S
+  SA --> GW
+  DC --> S
+  DC --> GW
+  X["Not in this repo"]
+  Broker["Pact Broker"] -.->|Not found| X
+  CI["GitHub Actions / Jenkins"] -.->|Not found| X

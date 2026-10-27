@@ -1,0 +1,10 @@
+flowchart TD
+  A[package.json + README] --> B[shared/contracts.js]
+  B --> C[shared/payloads.js]
+  C --> D[contracts/run-contracts.js]
+  D --> E[shared/createService.js]
+  E --> F[services/cem/index.js one service]
+  F --> G[scripts/start-all.js]
+  G --> H[gateway/index.js]
+  H --> I[gateway/filingRoutes.js]
+  I --> J[frontend/app.js optional]
