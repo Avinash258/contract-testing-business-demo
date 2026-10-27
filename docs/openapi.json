@@ -14,7 +14,7 @@
       "description": "This host (same origin)"
     },
     {
-      "url": "http://127.0.0.1:4100",
+      "url": "http://127.0.0.1:4200",
       "description": "Local gateway only"
     }
   ],
@@ -41,27 +41,27 @@
     },
     {
       "name": "Service CLM — Client Management",
-      "description": "CLM · Engagement, project, entity group & job context · port 4101"
+      "description": "CLM · Engagement, project, entity group & job context · port 4201"
     },
     {
       "name": "Service MDM — Master Data",
-      "description": "MDM · Legal entities, ownership, SALT & contacts · port 4102"
+      "description": "MDM · Legal entities, ownership, SALT & contacts · port 4202"
     },
     {
       "name": "Service ACC — Accounting",
-      "description": "ACC · Chart of accounts, mappings & adjustments · port 4103"
+      "description": "ACC · Chart of accounts, mappings & adjustments · port 4203"
     },
     {
       "name": "Service TAX — Tax Computation",
-      "description": "TAX · Forms import, federal / state recalculation · port 4104"
+      "description": "TAX · Forms import, federal / state recalculation · port 4204"
     },
     {
       "name": "Service ALC — Allocations",
-      "description": "ALC · Partner capital, allocate & tier · port 4105"
+      "description": "ALC · Partner capital, allocate & tier · port 4205"
     },
     {
       "name": "Service DOC — Forms & Documents",
-      "description": "DOC · Reporting sync & final print package · port 4106"
+      "description": "DOC · Reporting sync & final print package · port 4206"
     }
   ],
   "paths": {

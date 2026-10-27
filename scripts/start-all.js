@@ -40,6 +40,6 @@ function shutdown() {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-console.log('TaxMesh — starting 6 microservices + gateway');
-console.log('  CLM :4101  MDM :4102  ACC :4103  TAX :4104  ALC :4105  DOC :4106');
-console.log('UI: http://127.0.0.1:4100');
+console.log('TaxMesh V2 — starting 6 microservices + gateway');
+console.log('  CLM :4201  MDM :4202  ACC :4203  TAX :4204  ALC :4205  DOC :4206');
+console.log('UI: http://127.0.0.1:4200  (main stays on :4100)');

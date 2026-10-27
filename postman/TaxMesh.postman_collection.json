@@ -1,13 +1,13 @@
 {
   "info": {
     "name": "TaxMesh — CLM MDM ACC TAX ALC DOC",
-    "description": "TaxMesh partnership Form 1065 demo APIs.\n\n**Workspaces:** CLM · MDM · ACC · TAX · ALC · DOC\n**Contracts:** CT-00 … CT-17 (10 downstream + 8 upstream)\n**Flow:** GET /api/flow · /api/proxy/{svc}/downstream|{upstream}/{peer}\n\nImport with **TaxMesh Local** environment. Set `baseUrl` to your gateway\n(local http://127.0.0.1:4100 or Cloudflare tunnel HTTPS URL).\n\nExcel uploads: select file from testdata/set-0N/{clm,mdm,acc}.xlsx",
+    "description": "TaxMesh partnership Form 1065 demo APIs.\n\n**Workspaces:** CLM · MDM · ACC · TAX · ALC · DOC\n**Contracts:** CT-00 … CT-17 (10 downstream + 8 upstream)\n**Flow:** GET /api/flow · /api/proxy/{svc}/downstream|{upstream}/{peer}\n\nImport with **TaxMesh Local** environment. Set `baseUrl` to your gateway\n(local http://127.0.0.1:4200 or Cloudflare tunnel HTTPS URL).\n\nExcel uploads: select file from testdata/set-0N/{clm,mdm,acc}.xlsx",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://127.0.0.1:4100"
+      "value": "http://127.0.0.1:4200"
     }
   ],
   "item": [

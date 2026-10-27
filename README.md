@@ -9,15 +9,17 @@ Upload-driven **US partnership Form 1065** demo that matches the taxation micros
 
 Legacy codes (**CEM / MAD / CAM / TIM / RPAM / FORMS**) still work as aliases.
 
-| Workspace | Code | Port |
-|-----------|------|------|
-| Client Management | **CLM** | 4101 |
-| Master Data | **MDM** | 4102 |
-| Accounting | **ACC** | 4103 |
-| Tax Computation | **TAX** | 4104 |
-| Allocations | **ALC** | 4105 |
-| Forms & Documents | **DOC** | 4106 |
-| Gateway + UI + Swagger | — | **4100** |
+| Workspace | Code | Port (this V2 copy) | Main (unchanged) |
+|-----------|------|---------------------|------------------|
+| Client Management | **CLM** | 4201 | 4101 |
+| Master Data | **MDM** | 4202 | 4102 |
+| Accounting | **ACC** | 4203 | 4103 |
+| Tax Computation | **TAX** | 4204 | 4104 |
+| Allocations | **ALC** | 4205 | 4105 |
+| Forms & Documents | **DOC** | 4206 | 4106 |
+| Gateway + UI + Swagger | — | **4200** | **4100** |
+
+Run **main** and **V2 side by side**: leave main on `:4100`, start this folder with `npm start` → UI at http://127.0.0.1:4200.
 
 Letter aliases: **A=MDM · B=ACC · C=TAX · D=ALC · E=DOC**
 
@@ -51,16 +53,16 @@ Letter aliases: **A=MDM · B=ACC · C=TAX · D=ALC · E=DOC**
 #### Try it
 
 ```http
-GET   http://127.0.0.1:4100/api/proxy/CLM/v2/status
-GET   http://127.0.0.1:4100/api/proxy/CLM/v2/engagement
-PATCH http://127.0.0.1:4100/api/proxy/CLM/v2/engagement
-GET   http://127.0.0.1:4100/api/proxy/MDM/v2/entity
-GET   http://127.0.0.1:4100/api/proxy/MDM/v2/partners
-GET   http://127.0.0.1:4100/api/proxy/MDM/v2/ownership
-GET   http://127.0.0.1:4100/api/proxy/MDM/v2/status
+GET   http://127.0.0.1:4200/api/proxy/CLM/v2/status
+GET   http://127.0.0.1:4200/api/proxy/CLM/v2/engagement
+PATCH http://127.0.0.1:4200/api/proxy/CLM/v2/engagement
+GET   http://127.0.0.1:4200/api/proxy/MDM/v2/entity
+GET   http://127.0.0.1:4200/api/proxy/MDM/v2/partners
+GET   http://127.0.0.1:4200/api/proxy/MDM/v2/ownership
+GET   http://127.0.0.1:4200/api/proxy/MDM/v2/status
 ```
 
-Swagger: http://127.0.0.1:4100/api-docs → filter tag **API v2**.
+Swagger: http://127.0.0.1:4200/api-docs → filter tag **API v2**.
 
 ```bash
 git checkout v2
@@ -75,25 +77,25 @@ npm start
 - TAX / ALC business validation + calculate/allocate.
 - Tunnel-safe Swagger (same-origin server `/`).
 - Postman ZIP download from the UI (`/download/postman.zip`).
-- Soft teal UI theme.
+- Soft teal UI theme (main). **V2 UI uses a light blue theme.**
 
 ---
 
 ## Quick start
 
 ```bash
-cd C:\Project\ContratTestingBussinessDemo
+cd C:\AI-Project\ContratTestingBussinessDemoV2
 npm install
 npm start
 ```
 
 | URL | Resource |
 |-----|----------|
-| http://127.0.0.1:4100 | **TaxMesh UI** |
-| http://127.0.0.1:4100/api-docs | **Swagger** (same-origin servers — works behind Cloudflare tunnels) |
-| http://127.0.0.1:4100/openapi.json | OpenAPI JSON |
-| http://127.0.0.1:4100/api/flow | Downstream + upstream catalog |
-| http://127.0.0.1:4100/download/postman.zip | **Postman collection + environment** |
+| http://127.0.0.1:4200 | **TaxMesh UI (V2)** |
+| http://127.0.0.1:4200/api-docs | **Swagger** (same-origin servers — works behind Cloudflare tunnels) |
+| http://127.0.0.1:4200/openapi.json | OpenAPI JSON |
+| http://127.0.0.1:4200/api/flow | Downstream + upstream catalog |
+| http://127.0.0.1:4200/download/postman.zip | **Postman collection + environment** |
 
 ```bash
 npm run test:contracts

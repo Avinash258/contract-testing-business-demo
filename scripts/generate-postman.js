@@ -265,13 +265,13 @@ const collection = {
       '**Flow:** GET /api/flow · /api/proxy/{svc}/downstream|{upstream}/{peer}',
       '',
       'Import with **TaxMesh Local** environment. Set `baseUrl` to your gateway',
-      '(local http://127.0.0.1:4100 or Cloudflare tunnel HTTPS URL).',
+      '(local http://127.0.0.1:4200 or Cloudflare tunnel HTTPS URL).',
       '',
       'Excel uploads: select file from testdata/set-0N/{clm,mdm,acc}.xlsx',
     ].join('\n'),
     schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
   },
-  variable: [{ key: 'baseUrl', value: 'http://127.0.0.1:4100' }],
+  variable: [{ key: 'baseUrl', value: 'http://127.0.0.1:4200' }],
   item: [gateway, flow, filing, downloads, contractsFolder, aliases, ...SERVICE_ORDER.map((id) => byService[id])],
 };
 
@@ -279,7 +279,7 @@ const env = {
   id: 'taxmesh-local',
   name: 'TaxMesh Local',
   values: [
-    { key: 'baseUrl', value: 'http://127.0.0.1:4100', type: 'default', enabled: true },
+    { key: 'baseUrl', value: 'http://127.0.0.1:4200', type: 'default', enabled: true },
     { key: 'engagementId', value: 'ENG-2025-1065-001', type: 'default', enabled: true },
     { key: 'entityId', value: 'ENT-ALPHA-LP', type: 'default', enabled: true },
   ],
