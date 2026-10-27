@@ -1,0 +1,10 @@
+flowchart LR
+  subgraph Without["Without contracts"]
+    C1[Consumer] -->|hope it works| P1[Provider]
+    C1 -.->|breaks silently| X[Production bug]
+  end
+  subgraph With["With contracts (this demo)"]
+    C2[Consumer e.g. TAX] -->|expects keys| CT[Contract CT-02]
+    P2[Provider e.g. MDM] -->|must return keys| CT
+    R[run-contracts.js] -->|PASS/FAIL| CT
+  end

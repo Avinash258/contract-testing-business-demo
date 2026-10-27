@@ -1,0 +1,21 @@
+C4Context
+  title TaxMesh system context
+  Person(user, "Tax analyst / QA", "Uses browser UI")
+  Person(dev, "Developer", "Runs npm scripts")
+  System_Boundary(taxmesh, "TaxMesh demo") {
+    System(gw, "Gateway :4100", "SPA + proxy + filing")
+    System(clm, "CLM :4101", "Client Management")
+    System(mdm, "MDM :4102", "Master Data")
+    System(acc, "ACC :4103", "Accounting")
+    System(tax, "TAX :4104", "Tax Computation")
+    System(alc, "ALC :4105", "Allocations")
+    System(doc, "DOC :4106", "Forms & Documents")
+  }
+  Rel(user, gw, "HTTP")
+  Rel(dev, gw, "npm start / test:contracts")
+  Rel(gw, clm, "proxy / health")
+  Rel(gw, mdm, "proxy")
+  Rel(gw, acc, "proxy")
+  Rel(gw, tax, "proxy")
+  Rel(gw, alc, "proxy")
+  Rel(gw, doc, "proxy")

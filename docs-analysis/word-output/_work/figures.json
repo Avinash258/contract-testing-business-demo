@@ -1,0 +1,198 @@
+{
+  "figures": [
+    {
+      "fig": 1,
+      "file": "00-README-INDEX.md",
+      "index_in_file": 0,
+      "type": "flowchart",
+      "title": "How to read these analysis files",
+      "png": "fig-01.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 2,
+      "file": "01-beginner-concepts.md",
+      "index_in_file": 0,
+      "type": "flowchart",
+      "title": "With vs without contracts",
+      "png": "fig-02.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 3,
+      "file": "01-beginner-concepts.md",
+      "index_in_file": 1,
+      "type": "flowchart",
+      "title": "Test pyramid speed layers",
+      "png": "fig-03.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 4,
+      "file": "01-beginner-concepts.md",
+      "index_in_file": 2,
+      "type": "flowchart",
+      "title": "Downstream and upstream example",
+      "png": "fig-04.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 5,
+      "file": "01-beginner-concepts.md",
+      "index_in_file": 3,
+      "type": "flowchart",
+      "title": "Business problem this demo solves",
+      "png": "fig-05.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 6,
+      "file": "02-architecture.md",
+      "index_in_file": 0,
+      "type": "C4Context",
+      "title": "System context (C4-style)",
+      "png": "fig-06.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 7,
+      "file": "02-architecture.md",
+      "index_in_file": 1,
+      "type": "flowchart",
+      "title": "Gateway to six microservices",
+      "png": "fig-07.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 8,
+      "file": "02-architecture.md",
+      "index_in_file": 2,
+      "type": "flowchart",
+      "title": "Component diagram",
+      "png": "fig-08.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 9,
+      "file": "02-architecture.md",
+      "index_in_file": 3,
+      "type": "sequenceDiagram",
+      "title": "Contract data flow sequence",
+      "png": "fig-09.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 10,
+      "file": "02-architecture.md",
+      "index_in_file": 4,
+      "type": "flowchart",
+      "title": "Contract mesh CT-00 to CT-17",
+      "png": "fig-10.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 11,
+      "file": "02-architecture.md",
+      "index_in_file": 5,
+      "type": "flowchart",
+      "title": "Upload-driven filing flow",
+      "png": "fig-11.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 12,
+      "file": "02-architecture.md",
+      "index_in_file": 6,
+      "type": "classDiagram",
+      "title": "Module class diagram",
+      "png": "fig-12.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 13,
+      "file": "03-file-by-file-guide.md",
+      "index_in_file": 0,
+      "type": "flowchart",
+      "title": "Recommended beginner read order",
+      "png": "fig-13.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 14,
+      "file": "04-end-to-end-flow.md",
+      "index_in_file": 0,
+      "type": "sequenceDiagram",
+      "title": "Contract lifecycle sequence",
+      "png": "fig-14.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 15,
+      "file": "04-end-to-end-flow.md",
+      "index_in_file": 1,
+      "type": "flowchart",
+      "title": "Happy path verification",
+      "png": "fig-15.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 16,
+      "file": "04-end-to-end-flow.md",
+      "index_in_file": 2,
+      "type": "flowchart",
+      "title": "Contract broken path",
+      "png": "fig-16.png",
+      "ok": true,
+      "notes": "quotes inside node labels removed in COPY"
+    },
+    {
+      "fig": 17,
+      "file": "04-end-to-end-flow.md",
+      "index_in_file": 3,
+      "type": "sequenceDiagram",
+      "title": "Filing happy path sequence",
+      "png": "fig-17.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 18,
+      "file": "05-how-it-runs-explained.md",
+      "index_in_file": 0,
+      "type": "flowchart",
+      "title": "test:contracts check flow",
+      "png": "fig-18.png",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "fig": 19,
+      "file": "06-glossary-and-qna.md",
+      "index_in_file": 0,
+      "type": "flowchart",
+      "title": "Learning path progression",
+      "png": "fig-19.png",
+      "ok": true,
+      "notes": ""
+    }
+  ],
+  "fixes": [
+    "fig-08: defined sink node X for Broker/CI edges",
+    "fig-16: removed quotes inside node labels (taxAttributes)"
+  ]
+}

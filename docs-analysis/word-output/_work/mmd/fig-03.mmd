@@ -1,0 +1,5 @@
+flowchart TB
+  U[Unit] -->|one function| Fast
+  CT[Contract] -->|API shape between 2 services| Medium
+  INT[Integration] -->|real wiring + maybe DB| Slower
+  E2E[E2E] -->|full UI → all services| Slowest
