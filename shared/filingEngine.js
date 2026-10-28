@@ -929,14 +929,13 @@ function processFlow() {
 function clearDownstream(s, from) {
   if (from === 'cem' || from === 'mad') {
     // New CEM/MAD invalidates CAM books and all calculations
+    s.imports = s.imports || {};
     if (from === 'cem') {
-      s.imports = { ...(s.imports || {}), mad: undefined, cam: undefined };
       delete s.imports.mad;
-      delete s.imports.cam;
+      delete s.imports.mdm;
     }
-    if (from === 'mad') {
-      delete (s.imports || {}).cam;
-    }
+    delete s.imports.cam;
+    delete s.imports.acc;
     if (from === 'cem' || from === 'mad') {
       // keep trialBalance only if CAM re-uploaded later
       if (from === 'cem') s.partners = s.partners; // no-op keep until MAD re-upload
@@ -957,7 +956,11 @@ function clearDownstream(s, from) {
     // CAM must be uploaded again after upstream change
     if (s.published) {
       delete s.published.cam;
-      if (from === 'cem') delete s.published.mad;
+      delete s.published.acc;
+      if (from === 'cem') {
+        delete s.published.mad;
+        delete s.published.mdm;
+      }
     }
   }
   if (s.qualityGates) {

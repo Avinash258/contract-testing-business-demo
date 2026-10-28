@@ -18,6 +18,21 @@ const {
   flowSummary,
 } = require('./contracts');
 const { PAYLOADS } = require('./payloads');
+const store = require('./filingStore');
+const dataFlow = require('./dataFlow');
+
+/** Live payload for contracts backed by uploaded state; sample payload otherwise. */
+function contractPayload(contractId) {
+  if (contractId === 'CT-00') {
+    const s = store.read();
+    if (dataFlow.hasClm(s)) {
+      const live = dataFlow.clmPayload(s);
+      for (const key of Object.keys(live)) if (live[key] === undefined) live[key] = null;
+      return { contractId, ...live, source: 'live' };
+    }
+  }
+  return { ...PAYLOADS[contractId], source: 'sample' };
+}
 
 async function pullContract(ct, consumerId) {
   const target = urlFor(ct.producer, ct.path);
@@ -53,7 +68,7 @@ async function pullContract(ct, consumerId) {
 
 function produceEnvelope(ct, producerId) {
   return {
-    ...PAYLOADS[ct.id],
+    ...contractPayload(ct.id),
     contractId: ct.id,
     title: ct.title,
     producer: producerId,
@@ -238,6 +253,7 @@ function attachPipeline(app, serviceId, consumed) {
 module.exports = {
   attachFlowApis,
   attachPipeline,
+  contractPayload,
   produceEnvelope,
   pullContract,
 };

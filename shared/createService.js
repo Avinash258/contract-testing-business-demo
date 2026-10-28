@@ -9,10 +9,9 @@ const {
   resolveServiceId,
   apiDirection,
 } = require('./contracts');
-const { PAYLOADS } = require('./payloads');
 const { attachExcelUpload } = require('./serviceUploads');
 const { attachBusinessValidationApis } = require('./serviceValidation');
-const { attachFlowApis, attachPipeline } = require('./flowApis');
+const { attachFlowApis, attachPipeline, contractPayload } = require('./flowApis');
 const { attachV2Apis } = require('./serviceV2Apis');
 
 function createService(serviceId) {
@@ -56,7 +55,7 @@ function createService(serviceId) {
   for (const ct of produced) {
     app.get(ct.path, (_req, res) => {
       res.json({
-        ...PAYLOADS[ct.id],
+        ...contractPayload(ct.id),
         producer: meta.id,
         consumer: ct.consumer,
         direction: ct.direction,

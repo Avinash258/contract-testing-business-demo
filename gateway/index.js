@@ -404,7 +404,12 @@ app.use('/api/proxy/:serviceId', async (req, res) => {
   }
 
   try {
-    const r = await fetch(target, { method: req.method === 'GET' ? 'GET' : req.method });
+    const init = { method: req.method };
+    if (!['GET', 'HEAD'].includes(req.method) && req.body && Object.keys(req.body).length) {
+      init.headers = { 'content-type': 'application/json' };
+      init.body = JSON.stringify(req.body);
+    }
+    const r = await fetch(target, init);
     const body = await r.json();
     res.status(r.status).json(body);
   } catch (err) {
