@@ -21,6 +21,12 @@ const { PAYLOADS } = require('./payloads');
 const store = require('./filingStore');
 const dataFlow = require('./dataFlow');
 
+/** CT-00 wire shape: job reference is `jobNumber`, tax year is a string ("2025"). */
+function toCt00(engagement) {
+  const { jobId, taxYear, ...rest } = engagement;
+  return { ...rest, jobNumber: jobId, taxYear: taxYear != null ? String(taxYear) : null };
+}
+
 /** Live payload for contracts backed by uploaded state; sample payload otherwise. */
 function contractPayload(contractId) {
   if (contractId === 'CT-00') {
@@ -28,7 +34,7 @@ function contractPayload(contractId) {
     if (dataFlow.hasClm(s)) {
       const live = dataFlow.clmPayload(s);
       for (const key of Object.keys(live)) if (live[key] === undefined) live[key] = null;
-      return { contractId, ...live, source: 'live' };
+      return { contractId, ...toCt00(live), source: 'live' };
     }
   }
   return { ...PAYLOADS[contractId], source: 'sample' };

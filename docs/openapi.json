@@ -634,7 +634,7 @@
         "operationId": "clm_v2_engagement",
         "responses": {
           "200": {
-            "description": "Engagement + import metadata"
+            "description": "Engagement + import metadata (engagement.taxYear is a string, e.g. \"2025\")"
           }
         }
       },
@@ -681,11 +681,11 @@
           "200": {
             "description": "Updated"
           },
-          "400": {
-            "description": "No fields"
-          },
           "409": {
             "description": "No engagement"
+          },
+          "422": {
+            "description": "No updatable fields — body { apiVersion, errors: [{ code, message, allowed }] }"
           }
         }
       }
@@ -700,7 +700,7 @@
         "operationId": "clm_v2_status",
         "responses": {
           "200": {
-            "description": "Ready flag + ids"
+            "description": "isReady flag + ids"
           }
         }
       }
@@ -2097,10 +2097,17 @@
                   "clientId": "CLI-NV-TAX-01",
                   "projectId": "PRJ-ALPHA-1065-2025",
                   "entityGroupId": "EG-ALPHA",
-                  "jobId": "JOB-TY2025-001",
-                  "taxYear": 2025,
+                  "jobNumber": "JOB-TY2025-001",
+                  "entityName": "Alpha Partners LP",
+                  "taxYear": "2025",
                   "formType": "1065",
-                  "dueDate": "2026-03-15"
+                  "dueDate": "2026-03-15",
+                  "jurisdiction": "US-FED",
+                  "states": [
+                    "NY",
+                    "CA"
+                  ],
+                  "correlationId": "corr-ENG-2025-1065-001-00000"
                 }
               }
             }
