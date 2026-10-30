@@ -11,13 +11,9 @@ const PAYLOADS = {
     projectId: 'PRJ-ALPHA-1065-2025',
     entityGroupId: 'EG-ALPHA',
     jobId: 'JOB-TY2025-001',
-    entityName: 'Alpha Partners LP',
     taxYear: 2025,
     formType: '1065',
     dueDate: '2026-03-15',
-    jurisdiction: 'US-FED',
-    states: ['NY', 'CA'],
-    correlationId: 'corr-ENG-2025-1065-001-00000',
   },
   'CT-01': {
     contractId: 'CT-01',

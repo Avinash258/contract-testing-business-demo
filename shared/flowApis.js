@@ -27,8 +27,18 @@ function contractPayload(contractId) {
     const s = store.read();
     if (dataFlow.hasClm(s)) {
       const live = dataFlow.clmPayload(s);
-      for (const key of Object.keys(live)) if (live[key] === undefined) live[key] = null;
-      return { contractId, ...live, source: 'live' };
+      // Match marco CT-00 shape (no entityName / jurisdiction / states / correlationId)
+      const payload = {
+        clientId: live.clientId ?? null,
+        engagementId: live.engagementId ?? null,
+        projectId: live.projectId ?? null,
+        entityGroupId: live.entityGroupId ?? null,
+        jobId: live.jobId ?? null,
+        taxYear: live.taxYear ?? null,
+        formType: live.formType ?? null,
+        dueDate: live.dueDate ?? null,
+      };
+      return { contractId, ...payload, source: 'live' };
     }
   }
   // CT-01 (MDM): single v2 update vs marco — legalName → entityName
