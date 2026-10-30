@@ -108,8 +108,8 @@ function createService(serviceId) {
     attachBusinessValidationApis(app, id);
   }
 
-  // Branch v2: richer CLM + MDM (legacy MAD) APIs under /v2/*
-  if (['CLM', 'MDM'].includes(id)) {
+  // Branch v2: one new CLM API (GET /v2/status). MDM change is CT-01 field rename only.
+  if (id === 'CLM') {
     attachV2Apis(app, id);
   }
 

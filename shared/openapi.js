@@ -287,88 +287,14 @@ function buildOpenApi(options = {}) {
       },
     };
 
+    // v2 vs marco: exactly one new CLM operation (no MDM /v2 routes)
     if (id === 'CLM') {
-      paths[`${base}/v2/engagement`] = {
-        get: {
-          tags: [`Service CLM — ${svc.name}`, 'API v2'],
-          summary: 'CLM v2 — engagement snapshot',
-          operationId: 'clm_v2_engagement',
-          responses: { 200: { description: 'Engagement + import metadata' } },
-        },
-        patch: {
-          tags: [`Service CLM — ${svc.name}`, 'API v2'],
-          summary: 'CLM v2 — patch engagement fields',
-          operationId: 'clm_v2_engagement_patch',
-          requestBody: {
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    entityName: { type: 'string' },
-                    taxYear: { type: 'integer' },
-                    dueDate: { type: 'string' },
-                    formType: { type: 'string' },
-                    jurisdiction: { type: 'string' },
-                    states: { type: 'array', items: { type: 'string' } },
-                  },
-                },
-              },
-            },
-          },
-          responses: {
-            200: { description: 'Updated' },
-            400: { description: 'No fields' },
-            409: { description: 'No engagement' },
-          },
-        },
-      };
       paths[`${base}/v2/status`] = {
         get: {
           tags: [`Service CLM — ${svc.name}`, 'API v2'],
-          summary: 'CLM v2 — readiness status',
+          summary: 'CLM v2 — readiness status (NEW vs marco)',
           operationId: 'clm_v2_status',
-          responses: {
-            200: {
-              description:
-                'Ready flag + ids. Breaking vs previous: field `ready` renamed to `isReady`',
-            },
-          },
-        },
-      };
-    }
-
-    if (id === 'MDM') {
-      paths[`${base}/v2/entity`] = {
-        get: {
-          tags: [`Service MDM — ${svc.name}`, 'API v2'],
-          summary: 'MDM v2 — entity master (legacy MAD)',
-          operationId: 'mdm_v2_entity',
-          responses: { 200: { description: 'Entity' }, 404: { description: 'Not loaded' } },
-        },
-      };
-      paths[`${base}/v2/partners`] = {
-        get: {
-          tags: [`Service MDM — ${svc.name}`, 'API v2'],
-          summary: 'MDM v2 — partners list',
-          operationId: 'mdm_v2_partners',
-          responses: { 200: { description: 'Partners' }, 404: { description: 'Not loaded' } },
-        },
-      };
-      paths[`${base}/v2/ownership`] = {
-        get: {
-          tags: [`Service MDM — ${svc.name}`, 'API v2'],
-          summary: 'MDM v2 — ownership totals / validity',
-          operationId: 'mdm_v2_ownership',
-          responses: { 200: { description: 'Ownership summary' }, 404: { description: 'Not loaded' } },
-        },
-      };
-      paths[`${base}/v2/status`] = {
-        get: {
-          tags: [`Service MDM — ${svc.name}`, 'API v2'],
-          summary: 'MDM v2 — readiness status',
-          operationId: 'mdm_v2_status',
-          responses: { 200: { description: 'Ready flag + entity/partners' } },
+          responses: { 200: { description: 'ready flag + engagement ids' } },
         },
       };
     }
@@ -488,7 +414,10 @@ function buildOpenApi(options = {}) {
       get: {
         tags: [`Service ${ct.producer} — ${svc.name}`, 'Contracts CT-01…CT-17'],
         summary: `${ct.id}: ${ct.title}`,
-        description: `**${ct.direction}** contract · Producer **${ct.producer}** → Consumer **${ct.consumer}**`,
+        description:
+          ct.id === 'CT-01'
+            ? `**${ct.direction}** contract · Producer **${ct.producer}** → Consumer **${ct.consumer}**. v2 update vs marco: entity field \`legalName\` renamed to \`entityName\`.`
+            : `**${ct.direction}** contract · Producer **${ct.producer}** → Consumer **${ct.consumer}**`,
         operationId: ct.id.replace('-', '_'),
         responses: {
           200: {
@@ -535,7 +464,11 @@ function buildOpenApi(options = {}) {
     tags: [
       { name: 'Gateway', description: 'Aggregation & catalog APIs' },
       { name: 'Data flow', description: 'Downstream (forward) and upstream (reverse ask) APIs between modules' },
-      { name: 'API v2', description: 'Branch v2 richer CLM + MDM (MAD) endpoints under /v2/*' },
+      {
+        name: 'API v2',
+        description:
+          'Branch v2 vs marco: one new CLM op GET /api/proxy/CLM/v2/status; one MDM update on CT-01 (legalName→entityName). Rest matches marco.',
+      },
       {
         name: 'Filing — Form 1065',
         description:

@@ -31,6 +31,15 @@ function contractPayload(contractId) {
       return { contractId, ...live, source: 'live' };
     }
   }
+  // CT-01 (MDM): single v2 update vs marco — legalName → entityName
+  if (contractId === 'CT-01') {
+    const base = PAYLOADS['CT-01'];
+    const entities = (base.entities || []).map((e) => {
+      const { legalName, entityName, ...rest } = e;
+      return { ...rest, entityName: entityName || legalName };
+    });
+    return { ...base, entities, source: 'sample' };
+  }
   return { ...PAYLOADS[contractId], source: 'sample' };
 }
 

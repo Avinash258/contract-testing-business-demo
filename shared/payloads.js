@@ -23,8 +23,9 @@ const PAYLOADS = {
     contractId: 'CT-01',
     engagementId,
     entities: [
-      { entityId, legalName: 'Alpha Partners LP', ein: '12-3456789', entityType: 'partnership', taxYear: 2025 },
-      { entityId: 'ENT-BETA-LLC', legalName: 'Beta Holdings LLC', ein: '98-7654321', entityType: 'disregarded', taxYear: 2025 },
+      // v2 vs marco: legalName renamed to entityName (single MDM CT-01 update)
+      { entityId, entityName: 'Alpha Partners LP', ein: '12-3456789', entityType: 'partnership', taxYear: 2025 },
+      { entityId: 'ENT-BETA-LLC', entityName: 'Beta Holdings LLC', ein: '98-7654321', entityType: 'disregarded', taxYear: 2025 },
     ],
   },
   'CT-02': {
