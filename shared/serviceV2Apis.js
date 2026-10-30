@@ -17,7 +17,6 @@ function attachClmV2(app) {
       ready,
       engagement: {
         ...payload,
-        taxYear: payload.taxYear != null ? String(payload.taxYear) : null,
         bannerName: payload.entityName || null,
         importedAt: s.imports?.clm?.importedAt || s.imports?.cem?.importedAt || null,
         fileName: s.imports?.clm?.fileName || s.imports?.cem?.fileName || null,
@@ -68,15 +67,9 @@ function attachClmV2(app) {
       }
     }
     if (!updated.length) {
-      return res.status(422).json({
+      return res.status(400).json({
         apiVersion: 2,
-        errors: [
-          {
-            code: 'NO_UPDATABLE_FIELDS',
-            message: `Provide at least one of: ${allowed.join(', ')}`,
-            allowed,
-          },
-        ],
+        error: `Provide at least one of: ${allowed.join(', ')}`,
       });
     }
     store.write(s);

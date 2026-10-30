@@ -293,7 +293,7 @@ function buildOpenApi(options = {}) {
           tags: [`Service CLM — ${svc.name}`, 'API v2'],
           summary: 'CLM v2 — engagement snapshot',
           operationId: 'clm_v2_engagement',
-          responses: { 200: { description: 'Engagement + import metadata (engagement.taxYear is a string, e.g. "2025")' } },
+          responses: { 200: { description: 'Engagement + import metadata' } },
         },
         patch: {
           tags: [`Service CLM — ${svc.name}`, 'API v2'],
@@ -318,8 +318,8 @@ function buildOpenApi(options = {}) {
           },
           responses: {
             200: { description: 'Updated' },
+            400: { description: 'No fields' },
             409: { description: 'No engagement' },
-            422: { description: 'No updatable fields — body { apiVersion, errors: [{ code, message, allowed }] }' },
           },
         },
       };
@@ -328,7 +328,12 @@ function buildOpenApi(options = {}) {
           tags: [`Service CLM — ${svc.name}`, 'API v2'],
           summary: 'CLM v2 — readiness status',
           operationId: 'clm_v2_status',
-          responses: { 200: { description: 'isReady flag + ids' } },
+          responses: {
+            200: {
+              description:
+                'Ready flag + ids. Breaking vs previous: field `ready` renamed to `isReady`',
+            },
+          },
         },
       };
     }
